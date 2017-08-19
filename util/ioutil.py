@@ -1,6 +1,9 @@
 from __future__ import print_function
 from netaddr import *
-import subprocess
+from scapy.all import *
+logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
+import logging
+log = logging.getLogger(__name__)
 
 class NetworkUtil:
     @staticmethod
@@ -75,3 +78,19 @@ class NetworkUtil:
             elif line is None:
                 break
         return None
+
+    @staticmethod
+    def getMacbyIp(ip):
+        return getmacbyip(ip)
+
+    @staticmethod
+    def check_dependency(module):
+        """ Attempts to load the module; returns a boolean
+            indicating success or fail.
+        """
+        try:
+            mod = __import__(module)
+        except Exception, e:
+            log.error("Module %s failed to load! (%s)" % (module, e))
+            return False
+        return True

@@ -112,3 +112,6 @@ target
 *.iws
 *.ipr
 .idea
+
+info.log
+errors.log

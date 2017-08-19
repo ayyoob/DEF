@@ -1,0 +1,1 @@
+ATTACK_MAP = {"ArpSpoof":"arp_spoof","PortVulnerabilityTest":"port_vulnerability"}
