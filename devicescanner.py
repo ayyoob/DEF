@@ -3,18 +3,23 @@ import socket
 from util import ioutil
 import nmap
 from os import getuid, _exit
-import os
+import threading
 import json
 import logging.config
 import logging
-from attacks import generic_attack
+from time import gmtime, strftime
 from attacks import ATTACK_MAP
+from datetime import datetime
+import os
+import sys
+import traceback
 
 if int(getuid()) > 0:
     print('Please run as root.')
     _exit(1)
 
-def setup_logging(default_path='logging.json', default_level=logging.INFO,env_key='LOG_CFG'):
+logdatetime = strftime("%Y_%m_%d_%H_%M_%S_", gmtime())
+def setup_logging(default_path='logging.json', default_level=logging.INFO, env_key='LOG_CFG'):
     """Setup logging configuration
      """
     path = default_path
@@ -24,9 +29,12 @@ def setup_logging(default_path='logging.json', default_level=logging.INFO,env_ke
     if os.path.exists(path):
         with open(path, 'rt') as f:
             config = json.load(f)
+        config["handlers"]["info_file_handler"]["filename"] = "logs/" + logdatetime + \
+                                                              config["handlers"]["info_file_handler"]["filename"]
         logging.config.dictConfig(config)
     else:
         logging.basicConfig(level=default_level)
+
 
 def classReflectionLoader(name):
     name = 'attacks.%s.%s' % (ATTACK_MAP[name], name)
@@ -36,9 +44,11 @@ def classReflectionLoader(name):
         mod = getattr(mod, comp)
     return mod
 
+
 class LoadedModules:
     """ Load modules
     """
+
     def __init__(self):
         self.attacks = {}
 
@@ -49,55 +59,91 @@ class LoadedModules:
         """
         for module in ATTACK_MAP.keys():
             if ioutil.NetworkUtil.check_dependency('attacks.%s' % ATTACK_MAP[module]):
-                attackMap.update({ module: ATTACK_MAP[module]})
+                attackMap.update({module: ATTACK_MAP[module]})
 
 
 setup_logging()
 log = logging.getLogger(__name__)
-loader = LoadedModules()
 attackMap = {}
+loader = LoadedModules()
 loader.load(attackMap)
 
-log.info('----- IoT Device Network Exploitation Framework -----')
 
-hostname = socket.gethostname()
-host = socket.gethostbyname(hostname)
-netmask = ioutil.NetworkUtil.getNetMask(host)
-ipcidr = ioutil.NetworkUtil.getCidr(host, netmask)
-iprange = str(ipcidr[0].cidr)
+def main():
+    log.info('----- IoT Device Network Exploitation Framework -----')
+    hostname = socket.gethostname()
+    host = socket.gethostbyname(hostname)
+    netmask = ioutil.NetworkUtil.getNetMask(host)
+    ipcidr = ioutil.NetworkUtil.getCidr(host, netmask)
+    iprange = str(ipcidr[0].cidr)
 
-choice = raw_input("To scan ip range press 1 or to skip press any key: ")
-if (choice == '1'):
-    choice = raw_input("enter cidr default[%s]: " % (iprange))
-    if (choice != '') :
-        iprange = choice
+    choice = raw_input("To scan ip range press 1 or to skip press any key: ")
+    if (choice == '1'):
+        choice = raw_input("enter cidr default[%s]: " % (iprange))
+        if (choice != ''):
+            iprange = choice
 
-    log.info("IP Scanner started for range %s, Please Wait...." % iprange)
-    nm = nmap.PortScanner()
-    nm.scan(iprange, arguments='-sP -n')
-    for h in nm.all_hosts():
-        if 'mac' in nm[h]['addresses']:
-            print(nm[h]['addresses'], nm[h]['vendor'])
+        log.info("IP Scanner started for range %s, Please Wait...." % iprange)
+        nm = nmap.PortScanner()
+        nm.scan(iprange, arguments='-sP -n')
+        for h in nm.all_hosts():
+            if 'mac' in nm[h]['addresses']:
+                print(nm[h]['addresses'], nm[h]['vendor'])
 
-ipToAttack = raw_input("IP to attack: ")
-log.info('IP %s is configured for the attacks', ipToAttack)
-deviceConfig = {}
-ip = {"ip": ipToAttack}
-macAddress = {"macAddress": ioutil.NetworkUtil.getMacbyIp(ipToAttack)}
-deviceConfig.update(ip)
-deviceConfig.update(macAddress)
+    ipToAttack = raw_input("IP to attack: ")
+    log.info('IP %s is configured for the attacks', ipToAttack)
+    deviceConfig = {}
+    ip = {"ip": ipToAttack}
+    macAddress = {"macAddress": ioutil.NetworkUtil.getMacbyIp(ipToAttack)}
+    deviceConfig.update(ip)
+    deviceConfig.update(macAddress)
 
-with open('config.json') as data_file:
-    data = json.load(data_file)
-attacks = data["attack"]
+    with open('config.json') as data_file:
+        data = json.load(data_file)
+    attacks = data["attack"]
+    result = {}
 
-for attackName in attacks:
-    attackClass = classReflectionLoader(attackName)
-    currentAttack = attackClass(attackName, data[attackName], deviceConfig)
-    currentAttack.initialize()
-    currentAttack.shutdown()
+    currentAttack = None
+    try:
+        for attackName in attacks:
+            attackClass = classReflectionLoader(attackName)
+            currentAttack = attackClass(attackName, data[attackName], deviceConfig)
+            dt = datetime.now()
+            attackStartTime = dt.microsecond
+            log.info("%s Started." % attackName)
+            attack_status = {}
+            t = threading.Thread(target=currentAttack.initialize, args=(attack_status,))
+            stop_event = threading.Event()
+            t.daemon = True
+            t.start()
+            if (data[attackName]["execution_timeout_in_seconds"] is None) :
+                t.join()
+            else:
+                t.join(data[attackName]["execution_timeout_in_seconds"])
+
+            log.info("%s Result" % attack_status)
+            log.info("%s Completed." % attackName)
+            dt = datetime.now()
+            attackCompletedTime = dt.microsecond
+            if currentAttack.isCompleted:
+                result.update(
+                    {attackName: {"start_time": attackStartTime, "end_time": attackCompletedTime,
+                                  "result": attack_status}})
+            else:
+                currentAttack.shutdown()
+
+        deviceConfig.update({"attacks": result})
+        log.info(deviceConfig)
+        file = open("results/" + logdatetime + "result.json", "w")
+        deviceResult = json.dumps(deviceConfig, indent=4)  # note i gave it a different name
+        file.write(str(deviceResult))
+        file.close()
+    except Exception, j:
+        log.error('Error with attack: %s, %s' % (j, traceback.format_exc()))
+        if currentAttack is not None:
+            currentAttack.shutdown()
+        sys.exit(1)
 
 
-
-
-
+main()
+exit(1)

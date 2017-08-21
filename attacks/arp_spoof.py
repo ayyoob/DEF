@@ -18,12 +18,13 @@ class ArpSpoof(GenericAttack):
         super(ArpSpoof, self).__init__(attackName, attackConfig, deviceConfig)
 
 
-    def initialize(self):
+    def initialize(self, result):
         log.info("THIS IS TEST")
         print(self.config)
         print(self.attackName)
         print(self.device)
         print(self.running)
+        self.running = True
         return
 
     def respoofer(self, target, victim):
@@ -41,6 +42,6 @@ class ArpSpoof(GenericAttack):
             return None
 
     def shutdown(self):
-
+        self.running = False
         return True
 

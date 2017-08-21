@@ -113,5 +113,5 @@ target
 *.ipr
 .idea
 
-info.log
-errors.log
+*.log
+*result.json

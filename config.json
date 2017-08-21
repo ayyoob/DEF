@@ -1,12 +1,13 @@
 {
-  "attack": ["ArpSpoof", "PortVulnerabilityTest"],
-
+  "attack": ["PortVulnerabilityTest", "ArpSpoof"],
+  "mac_addresses":[],
   "ArpSpoof": {
-    "time_in_seconds": 120
+    "execution_timeout_in_seconds": 120
   },
 
   "PortVulnerabilityTest": {
-
+    "port_range": "0-1024",
+    "execution_timeout_in_seconds": 120
   }
 
 }

@@ -17,7 +17,7 @@ class GenericAttack(object):
         self.running = False
 
     @abc.abstractmethod
-    def initialize(self):
+    def initialize(self, result):
         """Initialization method that should be
            implemented at the module level
         """
@@ -33,3 +33,6 @@ class GenericAttack(object):
             self.running = False
 
         log.debug("%s shutdown." % self.attackName)
+
+    def isCompleted(self):
+        return not self.running
