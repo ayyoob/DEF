@@ -91,12 +91,18 @@ def main():
                 print(nm[h]['addresses'], nm[h]['vendor'])
 
     ipToAttack = raw_input("IP to attack: ")
+    gateway = "192.168.0.1"
+    defaultGatewayIP = raw_input("Default Gateway[%s]" % gateway)
+    if (defaultGatewayIP != '') :
+        gateway = defaultGatewayIP;
     log.info('IP %s is configured for the attacks', ipToAttack)
     deviceConfig = {}
     ip = {"ip": ipToAttack}
+    defaultgateway = {"gateway-ip": gateway}
     macAddress = {"macAddress": ioutil.NetworkUtil.getMacbyIp(ipToAttack)}
     deviceConfig.update(ip)
     deviceConfig.update(macAddress)
+    deviceConfig.update(defaultgateway)
 
     with open('config.json') as data_file:
         data = json.load(data_file)
@@ -113,24 +119,20 @@ def main():
             log.info("%s Started." % attackName)
             attack_status = {}
             t = threading.Thread(target=currentAttack.initialize, args=(attack_status,))
-            stop_event = threading.Event()
-            t.daemon = True
             t.start()
-            if (data[attackName]["execution_timeout_in_seconds"] is None) :
-                t.join()
-            else:
+            if (data[attackName].has_key("execution_timeout_in_seconds")) :
                 t.join(data[attackName]["execution_timeout_in_seconds"])
+            else:
+                t.join()
 
             log.info("%s Result" % attack_status)
             log.info("%s Completed." % attackName)
             dt = datetime.now()
             attackCompletedTime = dt.microsecond
-            if currentAttack.isCompleted:
-                result.update(
-                    {attackName: {"start_time": attackStartTime, "end_time": attackCompletedTime,
-                                  "result": attack_status}})
-            else:
-                currentAttack.shutdown()
+            currentAttack.shutdown()
+            t.join()
+            result.update({attackName: {"start_time": attackStartTime, "end_time": attackCompletedTime,
+                              "result": attack_status}})
 
         deviceConfig.update({"attacks": result})
         log.info(deviceConfig)
@@ -146,4 +148,3 @@ def main():
 
 
 main()
-exit(1)
