@@ -13,6 +13,7 @@ from datetime import datetime
 import os
 import sys
 import traceback
+import netifaces
 
 if int(getuid()) > 0:
     print('Please run as root.')
@@ -91,7 +92,7 @@ def main():
                 print(nm[h]['addresses'], nm[h]['vendor'])
 
     ipToAttack = raw_input("IP to attack: ")
-    gateway = "192.168.0.1"
+    gateway = netifaces.gateways()['default'].values()[0][0]
     defaultGatewayIP = raw_input("Default Gateway[%s]" % gateway)
     if (defaultGatewayIP != '') :
         gateway = defaultGatewayIP;
