@@ -72,9 +72,25 @@ loader.load(attackMap)
 
 def main():
     log.info('----- IoT Device Network Exploitation Framework -----')
+    with open('config.json') as data_file:
+        data = json.load(data_file)
+
+    interfaces = data["interfaces"]
+    interfaces = interfaces.split(',')
     hostname = socket.gethostname()
     host = socket.gethostbyname(hostname)
-    netmask = ioutil.NetworkUtil.getNetMask(host)
+    netmaskIsSet = False
+    for interface in interfaces:
+        try:
+            host = netifaces.ifaddresses(interface)[netifaces.AF_INET][0]['addr']
+            netmask = netifaces.ifaddresses(interface)[netifaces.AF_INET][0]['netmask']
+            netmaskIsSet = True
+        except Exception, j:
+            pass
+    if not netmaskIsSet:
+        host = socket.gethostbyname(hostname)
+        netmask = ioutil.NetworkUtil.getNetMask(host)
+
     ipcidr = ioutil.NetworkUtil.getCidr(host, netmask)
     iprange = str(ipcidr[0].cidr)
 
@@ -105,8 +121,6 @@ def main():
     deviceConfig.update(macAddress)
     deviceConfig.update(defaultgateway)
 
-    with open('config.json') as data_file:
-        data = json.load(data_file)
     attacks = data["attack"]
     result = {}
 
@@ -138,7 +152,7 @@ def main():
         deviceConfig.update({"attacks": result})
         log.info(deviceConfig)
         file = open("results/" + logdatetime + "result.json", "w")
-        deviceResult = json.dumps(deviceConfig, indent=4)  # note i gave it a different name
+        deviceResult = json.dumps(deviceConfig, indent=4)
         file.write(str(deviceResult))
         file.close()
     except Exception, j:
