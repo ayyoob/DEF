@@ -20,6 +20,23 @@
     "execution_timeout_in_seconds": 300,
     "domain": "hamza.com",
     "poisoned_ip": "157.240.8.35"
+  },
+
+  "LandDoS": {
+    "execution_timeout_in_seconds": 300
+  },
+
+  "TcpSyn": {
+    "execution_timeout_in_seconds": 300
+  },
+
+  "PingOfDeath": {
+    "execution_timeout_in_seconds": 300
+  },
+
+  "IcmpRedirection": {
+    "execution_timeout_in_seconds": 300,
+    "target_ip": "192.168.1.122"
   }
 
 }

