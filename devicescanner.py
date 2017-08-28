@@ -80,10 +80,13 @@ def main():
     hostname = socket.gethostname()
     host = socket.gethostbyname(hostname)
     netmaskIsSet = False
+    netmask = ''
+    broadcast_ip = ''
     for interface in interfaces:
         try:
             host = netifaces.ifaddresses(interface)[netifaces.AF_INET][0]['addr']
             netmask = netifaces.ifaddresses(interface)[netifaces.AF_INET][0]['netmask']
+            broadcast_ip = netifaces.ifaddresses(interface)[netifaces.AF_INET][0]['broadcast']
             netmaskIsSet = True
         except Exception, j:
             pass
@@ -117,9 +120,11 @@ def main():
     ip = {"ip": ipToAttack}
     defaultgateway = {"gateway-ip": gateway}
     macAddress = {"macAddress": ioutil.NetworkUtil.getMacbyIp(ipToAttack)}
+    broadcast = {"broadcast_ip": broadcast_ip}
     deviceConfig.update(ip)
     deviceConfig.update(macAddress)
     deviceConfig.update(defaultgateway)
+    deviceConfig.update(broadcast)
 
     attacks = data["attack"]
     result = {}
