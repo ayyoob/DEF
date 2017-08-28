@@ -37,6 +37,22 @@
   "IcmpRedirection": {
     "execution_timeout_in_seconds": 300,
     "target_ip": "192.168.1.122"
+  },
+
+  "Smurf": {
+    "execution_timeout_in_seconds": 300
+  },
+
+  "Fraggle": {
+    "execution_timeout_in_seconds": 300
+  },
+
+  "Ssdp": {
+    "execution_timeout_in_seconds": 300
+  },
+
+  "Snmp": {
+    "execution_timeout_in_seconds": 300
   }
 
 }
