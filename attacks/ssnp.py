@@ -25,7 +25,13 @@ class Ssnp(GenericAttack):
 
         openPorts = self.device["vulnerable_ports"]["udp"]["open"]
         if 161 in openPorts:
-            return {"status": "vulnerable to ssnp"}
+            # while self.running:
+            #     send(IP(dst=target) / UDP(dport=1911) / SNMP(version="v2c", community='public',
+            #                                                  PDU=SNMPbulk(id=RandNum(1, 200000000),
+            #                                                               max_repetitions=10, varbindlist=[
+            #                                                                   SNMPvarbind(oid=ASN1_OID('1'))])))
+
+            return {"status": "vulnerable"}
 
         return {"status": "no_open_ports"}
 
