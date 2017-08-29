@@ -53,6 +53,11 @@
 
   "Snmp": {
     "execution_timeout_in_seconds": 300
+  },
+
+  "UdpFlood": {
+    "execution_timeout_in_seconds": 300
   }
+
 
 }

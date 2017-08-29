@@ -7,10 +7,10 @@ from re import search
 from subprocess import Popen
 from commands import getoutput
 
-class Fraggle(GenericAttack):
+class Ssdp(GenericAttack):
 
     def __init__(self, attackName, attackConfig, deviceConfig):
-        super(Fraggle, self).__init__(attackName, attackConfig, deviceConfig)
+        super(Ssdp, self).__init__(attackName, attackConfig, deviceConfig)
 
     def initialize(self, result):
         self.running = True

