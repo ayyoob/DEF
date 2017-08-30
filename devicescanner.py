@@ -14,6 +14,7 @@ import os
 import sys
 import traceback
 import netifaces
+import time
 
 if int(getuid()) > 0:
     print('Please run as root.')
@@ -69,12 +70,67 @@ attackMap = {}
 loader = LoadedModules()
 loader.load(attackMap)
 
+def performAttacks(data, deviceConfig, iprange):
+    result = {}
+    attacks = data["attack"]
+    currentAttack = None
+    macAddress = deviceConfig['macAddress']
+    try:
+        for attackName in attacks:
 
-def main():
-    log.info('----- IoT Device Network Exploitation Framework -----')
-    with open('config.json') as data_file:
-        data = json.load(data_file)
+            ipToAttack = getIp(iprange, macAddress)
+            retryCount = 0
+            maxRetry = 5
+            while (ipToAttack is None or ipToAttack == '') and retryCount < maxRetry:
+                ipToAttack = getIp(iprange, macAddress)
+                retryCount = retryCount + 1
+                time.sleep(5)
+                log.info("Device with macAddress %s is not reachable, retrying" % macAddress)
+            if ((ipToAttack is None or ipToAttack == '') and retryCount == maxRetry):
+                log.info("Device with macAddress %s is not reachable" % macAddress)
+                sys.exit(1)
 
+            deviceConfig['ip'] = ipToAttack
+            attackClass = classReflectionLoader(attackName)
+            currentAttack = attackClass(attackName, data[attackName], deviceConfig)
+            dt = datetime.now()
+            attackStartTime = dt.microsecond
+            log.info("%s Started. for device ip %s " % (attackName, ipToAttack))
+            attack_status = {}
+            t = threading.Thread(target=currentAttack.initialize, args=(attack_status,))
+            t.start()
+            if (data[attackName].has_key("execution_timeout_in_seconds")):
+                t.join(data[attackName]["execution_timeout_in_seconds"])
+            else:
+                t.join()
+
+            log.info("%s Result" % attack_status)
+            log.info("%s Completed." % attackName)
+            dt = datetime.now()
+            attackCompletedTime = dt.microsecond
+            currentAttack.shutdown()
+            t.join()
+            result.update({attackName: {"start_time": attackStartTime, "end_time": attackCompletedTime,
+                                        "result": attack_status}})
+
+        return result;
+    except Exception, j:
+        log.error('Error with attack: %s, %s' % (j, traceback.format_exc()))
+        if currentAttack is not None:
+            currentAttack.shutdown()
+        return result;
+
+def getIp(iprange, macAddress):
+    nm = nmap.PortScanner()
+    nm.scan(iprange, arguments='-sP -n')
+    for h in nm.all_hosts():
+        if 'mac' in nm[h]['addresses']:
+            if nm[h]['addresses']['mac'] == macAddress:
+                return nm[h]['addresses']['ipv4']
+
+    return None
+
+def getDeviceNetworkConfig(data):
     interfaces = data["interfaces"]
     interfaces = interfaces.split(',')
     hostname = socket.gethostname()
@@ -97,75 +153,66 @@ def main():
     ipcidr = ioutil.NetworkUtil.getCidr(host, netmask)
     iprange = str(ipcidr[0].cidr)
 
-    choice = raw_input("To scan ip range press 1 or to skip press any key: ")
-    if (choice == '1'):
-        choice = raw_input("enter cidr default[%s]: " % (iprange))
-        if (choice != ''):
-            iprange = choice
+    macAddress = data['mac_address']
+    if macAddress is None or macAddress == "":
+        choice = raw_input("To scan ip range press 1 or to skip press any key: ")
+        if (choice == '1'):
+            choice = raw_input("enter cidr default[%s]: " % (iprange))
+            if (choice != ''):
+                iprange = choice
 
-        log.info("IP Scanner started for range %s, Please Wait...." % iprange)
-        nm = nmap.PortScanner()
-        nm.scan(iprange, arguments='-sP -n')
-        for h in nm.all_hosts():
-            if 'mac' in nm[h]['addresses']:
-                print(nm[h]['addresses'], nm[h]['vendor'])
+            log.info("IP Scanner started for range %s, Please Wait...." % iprange)
+            nm = nmap.PortScanner()
+            nm.scan(iprange, arguments='-sP -n')
+            for h in nm.all_hosts():
+                if 'mac' in nm[h]['addresses']:
+                    print(nm[h]['addresses'], nm[h]['vendor'])
+        macAddressToAttack = ''
+        while macAddressToAttack == '':
+            macAddressToAttack = raw_input("MacAddress to attack: ")
+        gateway = netifaces.gateways()['default'].values()[0][0]
+        defaultGatewayIP = raw_input("Default Gateway[%s]" % gateway)
+        if (defaultGatewayIP != ''):
+            gateway = defaultGatewayIP;
+        macAddress = macAddressToAttack
+    else:
+        defaultGateway = data['default_gateway']
+        if defaultGateway is None or defaultGateway == "":
+            gateway = netifaces.gateways()['default'].values()[0][0]
+        else:
+            gateway = defaultGateway
 
-    ipToAttack = raw_input("IP to attack: ")
-    gateway = netifaces.gateways()['default'].values()[0][0]
-    defaultGatewayIP = raw_input("Default Gateway[%s]" % gateway)
-    if (defaultGatewayIP != '') :
-        gateway = defaultGatewayIP;
-    log.info('IP %s is configured for the attacks', ipToAttack)
+    return macAddress, gateway, broadcast_ip, iprange
+
+def main():
+    log.info('----- IoT Device Network Exploitation Framework -----')
+    with open('config.json') as data_file:
+        data = json.load(data_file)
+
+    macAddress, gateway, broadcast_ip, iprange = getDeviceNetworkConfig(data);
+    ipToAttack = getIp(iprange, macAddress)
+
+    log.info('IP %s & macAddress %s is configured for the attacks' % (ipToAttack, macAddress))
     deviceConfig = {}
-    ip = {"ip": ipToAttack}
     defaultgateway = {"gateway-ip": gateway}
-    macAddress = {"macAddress": ioutil.NetworkUtil.getMacbyIp(ipToAttack)}
+    macAddress = {"macAddress": macAddress}
     broadcast = {"broadcast_ip": broadcast_ip}
     testTimeStamp = {"time": logdatetime}
+    ip = {"ip": ipToAttack}
+
     deviceConfig.update(ip)
     deviceConfig.update(macAddress)
     deviceConfig.update(defaultgateway)
     deviceConfig.update(broadcast)
     deviceConfig.update(testTimeStamp)
-    attacks = data["attack"]
-    result = {}
 
-    currentAttack = None
-    try:
-        for attackName in attacks:
-            attackClass = classReflectionLoader(attackName)
-            currentAttack = attackClass(attackName, data[attackName], deviceConfig)
-            dt = datetime.now()
-            attackStartTime = dt.microsecond
-            log.info("%s Started." % attackName)
-            attack_status = {}
-            t = threading.Thread(target=currentAttack.initialize, args=(attack_status,))
-            t.start()
-            if (data[attackName].has_key("execution_timeout_in_seconds")) :
-                t.join(data[attackName]["execution_timeout_in_seconds"])
-            else:
-                t.join()
+    result = performAttacks(data, deviceConfig, iprange)
 
-            log.info("%s Result" % attack_status)
-            log.info("%s Completed." % attackName)
-            dt = datetime.now()
-            attackCompletedTime = dt.microsecond
-            currentAttack.shutdown()
-            t.join()
-            result.update({attackName: {"start_time": attackStartTime, "end_time": attackCompletedTime,
-                              "result": attack_status}})
-
-        deviceConfig.update({"attacks": result})
-        log.info(deviceConfig)
-        file = open("results/" + logdatetime + "result.json", "w")
-        deviceResult = json.dumps(deviceConfig, indent=4)
-        file.write(str(deviceResult))
-        file.close()
-    except Exception, j:
-        log.error('Error with attack: %s, %s' % (j, traceback.format_exc()))
-        if currentAttack is not None:
-            currentAttack.shutdown()
-        sys.exit(1)
-
+    deviceConfig.update({"attacks": result})
+    log.info(deviceConfig)
+    file = open("results/" + logdatetime + "result.json", "w")
+    deviceResult = json.dumps(deviceConfig, indent=4)
+    file.write(str(deviceResult))
+    file.close()
 
 main()

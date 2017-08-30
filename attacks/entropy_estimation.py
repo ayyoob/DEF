@@ -1,10 +1,6 @@
 import logging
-from arp_spoof import ArpSpoof
-from dns_spoof import DnsSpoof
 from generic_attack import *
 import logging
-import threading
-import time
 log = logging.getLogger(__name__)
 
 

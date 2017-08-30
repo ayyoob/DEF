@@ -1,7 +1,8 @@
 {
-  "attack": ["ArpSpoof", "EntropyEstimation"],
+  "attack": ["ArpSpoof", "EntropyEstimation", "PortVulnerabilityTest" ,"PasswordAttack"],
   "interfaces": "eth0,en0",
-  "mac_addresses":[],
+  "mac_address":"",
+  "default_gateway":"",
   "ArpSpoof": {
     "execution_timeout_in_seconds": 10,
     "tcpdump": true
@@ -63,6 +64,10 @@
 
   "UdpFlood": {
     "execution_timeout_in_seconds": 300
+  },
+
+  "PasswordAttack": {
+
   }
 
 
