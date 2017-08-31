@@ -20,4 +20,7 @@ class EntropyEstimation(GenericAttack):
     def shutdown(self):
         self.running = False
 
+    def prerequisite(self):
+        return ["ArpSpoof"]
+
 

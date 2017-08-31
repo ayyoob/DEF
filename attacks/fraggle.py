@@ -17,15 +17,21 @@ class Fraggle(GenericAttack):
         target = self.device['ip']
 
         if self.device["vulnerable_ports"] is None:
-            return {"status": "no_open_ports"}
-        elif self.device["vulnerable_ports"]["udp"] is None:
-            return {"status": "no_open_ports"}
-        elif self.device["vulnerable_ports"]["udp"]["open"] is None:
-            return {"status": "no_open_ports"}
+            result.update({"status": "no open ports"})
+            return
+
+        if "udp" not in self.device["vulnerable_ports"].keys():
+            result.update({"status": "no open ports"})
+            return
+
+        if "open" not in self.device["vulnerable_ports"]["udp"].keys():
+            result.update({"status": "no open ports"})
+            return
 
         openPorts = self.device["vulnerable_ports"]["udp"]["open"]
         if 7 not in openPorts and 9 not in openPorts:
-            return {"status": "no_open_ports"}
+            result.update({"status": "no open ports"})
+            return
 
         while self.running:
             if 7 in openPorts:
@@ -40,15 +46,17 @@ class Fraggle(GenericAttack):
 
             if not self.is_alive():
                 log.info('Host not responding!')
-                return {"status": "not_responding"}
+                result.update({"status": "vulnerable"})
+                return
 
-        return {"status": "responding"}
+        result.update({"status": "not_vulnerable"})
+        return
 
     def is_alive(self):
         """Check if the target is alive"""
-        if not self.config['target'].value is None:
+        if not self.device['ip'] is None:
             rval = self.init_app('ping -c 1 -w 1 %s' % \
-                                 self.config['target'].value, True)
+                                 self.device['ip'], True)
             up = search('\d.*? received', rval)
             if search('0', up.group(0)) is None:
                 return True

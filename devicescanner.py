@@ -46,6 +46,8 @@ def classReflectionLoader(name):
         mod = getattr(mod, comp)
     return mod
 
+def blockPrint():
+    sys.stdout = open(os.devnull, 'w')
 
 class LoadedModules:
     """ Load modules
@@ -69,6 +71,23 @@ log = logging.getLogger(__name__)
 attackMap = {}
 loader = LoadedModules()
 loader.load(attackMap)
+
+def validatePrerequisite(data):
+    attacks = data["attack"]
+    for attackName in attacks:
+        attackClass = classReflectionLoader(attackName)
+        currentAttack = attackClass(None, None, None)
+        prerequisiteAttacks = currentAttack.prerequisite()
+        if prerequisiteAttacks is None:
+            continue
+        attackIndex = attacks.index(attackName)
+        attacksSet = set(attacks[:attackIndex])
+        status = set(prerequisiteAttacks).issubset(attacksSet)
+        if not status:
+            return False, ''.join(prerequisiteAttacks)
+
+    return True, "success"
+
 
 def performAttacks(data, deviceConfig, iprange):
     result = {}
@@ -103,13 +122,12 @@ def performAttacks(data, deviceConfig, iprange):
                 t.join(data[attackName]["execution_timeout_in_seconds"])
             else:
                 t.join()
-
+            currentAttack.shutdown()
+            t.join()
             log.info("%s Result" % attack_status)
             log.info("%s Completed." % attackName)
             dt = datetime.now()
             attackCompletedTime = dt.microsecond
-            currentAttack.shutdown()
-            t.join()
             result.update({attackName: {"start_time": attackStartTime, "end_time": attackCompletedTime,
                                         "result": attack_status}})
 
@@ -189,7 +207,13 @@ def main():
     with open('config.json') as data_file:
         data = json.load(data_file)
 
+    status, invalidAttack = validatePrerequisite(data)
+    if not status:
+        log.error("%s prerequisite is not configured" % invalidAttack)
+        return False;
+
     macAddress, gateway, broadcast_ip, iprange = getDeviceNetworkConfig(data);
+    blockPrint()
     ipToAttack = getIp(iprange, macAddress)
 
     log.info('IP %s & macAddress %s is configured for the attacks' % (ipToAttack, macAddress))
@@ -206,9 +230,11 @@ def main():
     deviceConfig.update(broadcast)
     deviceConfig.update(testTimeStamp)
 
+
     result = performAttacks(data, deviceConfig, iprange)
 
     deviceConfig.update({"attacks": result})
+    deviceConfig.update({"setup": data})
     log.info(deviceConfig)
     file = open("results/" + logdatetime + "result.json", "w")
     deviceResult = json.dumps(deviceConfig, indent=4)

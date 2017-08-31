@@ -22,6 +22,10 @@
     "poisoned_ip": "192.168.1.100"
   },
 
+  "TcpConnectionFlood" : {
+    "max_connection_per_port" : 500
+  },
+
   "FakeServer": {
     "execution_timeout_in_seconds": 300,
     "domain": "hamza.com",
@@ -30,11 +34,14 @@
   },
 
   "LandDoS": {
-    "execution_timeout_in_seconds": 300
+    "packet_count": 1000000,
+    "data_size": 1000,
+    "interval": "u1",
+    "__comment__" : "interval u prefix is to denote micro seconds else it would be seconds, data size is in bytes"
   },
 
   "TcpSyn": {
-    "execution_timeout_in_seconds": 300
+    "execution_timeout_in_seconds": 60
   },
 
   "PingOfDeath": {

@@ -14,12 +14,17 @@ class PasswordAttack(GenericAttack):
         target = self.device['ip']
 
         if self.device["vulnerable_ports"] is None:
-            return {"status": "no_open_ports"}
-        elif self.device["vulnerable_ports"]["tcp"] is None:
-            return {"status": "no_open_ports"}
-        elif self.device["vulnerable_ports"]["tcp"]["open"] is None:
-            return {"status": "no_open_ports"}
+            result.update({"status": "no open ports"})
+            return
 
+        if "tcp" not in self.device["vulnerable_ports"].keys():
+            result.update({"status": "no open ports"})
+            return
+
+        if "open" not in self.device["vulnerable_ports"]["tcp"].keys():
+            result.update({"status": "no open ports"})
+            return
+        
         openPorts = self.device["vulnerable_ports"]["tcp"]["open"]
         # telnet and ssh tests needs to be added here
 
@@ -27,4 +32,5 @@ class PasswordAttack(GenericAttack):
     def shutdown(self):
         self.running = False
 
-
+    def prerequisite(self):
+        return ["PortVulnerabilityTest"]

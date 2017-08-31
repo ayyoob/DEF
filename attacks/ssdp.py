@@ -17,15 +17,21 @@ class Ssdp(GenericAttack):
         target = self.device['ip']
 
         if self.device["vulnerable_ports"] is None:
-            return {"status": "no_open_ports"}
-        elif self.device["vulnerable_ports"]["udp"] is None:
-            return {"status": "no_open_ports"}
-        elif self.device["vulnerable_ports"]["udp"]["open"] is None:
-            return {"status": "no_open_ports"}
+            result = {"status": "no open ports"}
+            return
+
+        if "udp" not in self.device["vulnerable_ports"].keys():
+            result = {"status": "no open ports"}
+            return
+
+        if "open" not in self.device["vulnerable_ports"]["udp"].keys():
+            result = {"status": "no open ports"}
+            return
 
         openPorts = self.device["vulnerable_ports"]["udp"]["open"]
         if 1900 in openPorts:
-            return {"status": "vulnerable"}
+            result = {"status": "vulnerable"}
+            return
             # SSDP_ADDR = target
             # SSDP_PORT = 1900
             # SSDP_MX = 1
@@ -45,13 +51,14 @@ class Ssdp(GenericAttack):
             #         log.info('Host not responding!')
             #         return {"status": "not_responding"}
 
-        return {"status": "no_open_ports"}
+        result = {"status": "not vulnerable"}
+        return
 
     def is_alive(self):
         """Check if the target is alive"""
-        if not self.config['target'].value is None:
+        if not self.device['ip'] is None:
             rval = self.init_app('ping -c 1 -w 1 %s' % \
-                                 self.config['target'].value, True)
+                                 self.device['ip'], True)
             up = search('\d.*? received', rval)
             if search('0', up.group(0)) is None:
                 return True
@@ -81,4 +88,5 @@ class Ssdp(GenericAttack):
     def shutdown(self):
         self.running = False
 
-
+    def prerequisite(self):
+        return ["PortVulnerabilityTest"]

