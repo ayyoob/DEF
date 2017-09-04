@@ -1,5 +1,5 @@
 {
-  "attack": ["PortVulnerabilityTest", "LandDoS", "TcpSyn", "PingOfDeath"],
+  "attack": ["PortVulnerabilityTest", "LandDoS", "TcpSyn", "PingOfDeath", "TcpConnectionFlood", "UdpFlood", "Smurf", "Ssdp", "Snmp"],
   "interfaces": "eth0,en0",
   "mac_address":"EC:1A:59:79:F4:89",
   "default_gateway":"",
@@ -18,7 +18,7 @@
     "port_range": "0-10",
     "udp": false,
     "optimization": "-T4 --max-retries 3 --min-parallelism 20 --stats-every 1m",
-    "result": {"tcp": {"filtered": [], "open": [53, 49153]}}
+    "result": {"tcp": {"filtered": [], "open": [53, 49153]}, "udp": {"filtered": [], "open": [53, 1900, 3111, 7638, 13965, 14675, 17143, 19422, 22894, 23835, 26011, 27047, 38849, 40014, 41970, 42518, 43403, 47836, 53121, 53330, 55353, 65484]}}
   },
 
   "DnSpoof": {
@@ -28,7 +28,7 @@
   },
 
   "TcpConnectionFlood" : {
-    "max_connection_per_port" : 2000
+    "execution_timeout_in_seconds": 120
   },
 
   "FakeServer": {
@@ -56,30 +56,35 @@
     "execution_timeout_in_seconds": 120
   },
 
+  "UdpFlood": {
+    "execution_timeout_in_seconds": 120,
+    "packet_size_in_bytes": 5
+  },
+
   "IcmpRedirection": {
     "execution_timeout_in_seconds": 300,
     "target_ip": "192.168.1.122"
   },
 
   "Smurf": {
-    "execution_timeout_in_seconds": 300
-  },
-
-  "Fraggle": {
-    "execution_timeout_in_seconds": 300
+    "packet_count": 10,
+    "tcpdump": true,
+    "file_prefix": "smurf"
   },
 
   "Ssdp": {
-    "execution_timeout_in_seconds": 300
+    "packet_count": 1,
+    "tcpdump": true,
+    "file_prefix": "ssdp"
   },
 
   "Snmp": {
-    "execution_timeout_in_seconds": 300
+    "packet_count": 1,
+    "tcpdump": true,
+    "file_prefix": "ssnp"
   },
 
-  "UdpFlood": {
-    "execution_timeout_in_seconds": 300
-  },
+
 
   "PasswordAttack": {
 

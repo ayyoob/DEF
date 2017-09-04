@@ -43,10 +43,10 @@ class PingOfDeath(GenericAttack):
                 detected = detected + 1
                 time.sleep(0.1)
                 if detected == max:
-                    result.update({"status": "vulnerable", "dos-status": "device not responding"})
+                    result.update({"status": "vulnerable"})
                     self.running = False
                     return
-        result.update({"status": "not_vulnerable", "dos-status": "device responding"})
+        result.update({"status": "not_vulnerable"})
 
     def address_spoofer(self):
 

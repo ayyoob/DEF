@@ -1,6 +1,7 @@
 import socket
 
 from util import ioutil
+from util import report_generator
 import nmap
 from os import getuid, _exit
 import threading
@@ -243,5 +244,8 @@ def main():
     deviceResult = json.dumps(deviceConfig, indent=4)
     file.write(str(deviceResult))
     file.close()
+
+    reportGenerator = report_generator.ReportGenerator(result)
+    reportGenerator.generate(data, deviceConfig, result)
 
 main()

@@ -64,35 +64,17 @@ class LandDoS(GenericAttack):
         if self.config['vulnerability_validation']:
             file_prefix = self.config["file_prefix"]
             filename = 'results/' + self.device['time'] + '_' + file_prefix + '_cap.pcap'
-            # f = open(filename)
-            # pcap = dpkt.pcap.Reader(f)
-            # for ts, buf in pcap:
-            #     eth = dpkt.ethernet.Ethernet(buf)
-            #     ip = eth.data
-            #     tcp = ip.data
-            #     log.info(ip)
-            #
-            #     if ip.src == ip.dst and tcp.flags== 12:
-            #         vulnerable = True
-            #
-            # f.close()
             pcap = rdpcap(filename)
             sessions = pcap.sessions()
             for session in sessions:
                 for packet in sessions[session]:
                     try:
-                        log.info("%s, %s, %d" % (packet['IP'].src, packet['IP'].dst, packet['TCP'].flags))
                         if packet['IP'].src == packet['IP'].dst and packet['TCP'].flags == 12:
                             if packet['TCP'].dport in self.device["vulnerable_ports"]["tcp"]["open"] or packet['TCP'].sport in \
                                     self.device["vulnerable_ports"]["tcp"]["open"]:
-                                log.info(packet['TCP']);
-                            vulnerable = True
-
-
+                                vulnerable = True
                     except:
                         pass
-
-
 
         if vulnerable:
             result.update({"status": "vulnerable"})
@@ -115,6 +97,7 @@ class LandDoS(GenericAttack):
 
     def shutdown(self):
         if self.config['vulnerability_validation']:
+            global arpspoof
             arpspoof.shutdown()
         self.running = False
 
