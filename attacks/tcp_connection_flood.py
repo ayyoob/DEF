@@ -38,10 +38,11 @@ class TcpConnectionFlood(GenericAttack):
                 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                 try:
                     sock.connect(device_addr)
+                    # time.sleep(0.01)
                     counter += 1
                     totalCounter += 1
                 except socket.error, msg:
-                    log.info(msg)
+                    pass
 
                 if not self.retry_is_alive():
                     connectionsPerPort[port] = counter

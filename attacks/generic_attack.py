@@ -78,7 +78,7 @@ class GenericAttack(object):
         else:
             return getoutput(prog)
 
-    def retry_is_alive(self, maxRetry=5, sleep=0.5):
+    def retry_is_alive(self, maxRetry=3, sleep=0.5):
         retryCount = 0
         while (not self.is_alive()):
             retryCount = retryCount + 1

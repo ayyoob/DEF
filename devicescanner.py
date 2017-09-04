@@ -9,7 +9,6 @@ import logging.config
 import logging
 from time import gmtime, strftime
 from attacks import ATTACK_MAP
-from datetime import datetime
 import os
 import sys
 import traceback
@@ -92,6 +91,7 @@ def validatePrerequisite(data):
 def performAttacks(data, deviceConfig, iprange):
     result = {}
     attacks = data["attack"]
+    interval = data["interval_between_attacks_in_seconds"]
     currentAttack = None
     macAddress = deviceConfig['macAddress']
     try:
@@ -112,12 +112,12 @@ def performAttacks(data, deviceConfig, iprange):
             deviceConfig['ip'] = ipToAttack
             attackClass = classReflectionLoader(attackName)
             currentAttack = attackClass(attackName, data[attackName], deviceConfig)
-            dt = datetime.now()
-            attackStartTime = dt.microsecond
+            attackStartTime = int(time.time())
             log.info("%s Started. for device ip %s " % (attackName, ipToAttack))
             attack_status = {}
             t = threading.Thread(target=currentAttack.initialize, args=(attack_status,))
             t.start()
+
             if (data[attackName].has_key("execution_timeout_in_seconds")):
                 t.join(data[attackName]["execution_timeout_in_seconds"])
             else:
@@ -126,10 +126,10 @@ def performAttacks(data, deviceConfig, iprange):
             t.join()
             log.info("%s Result" % attack_status)
             log.info("%s Completed." % attackName)
-            dt = datetime.now()
-            attackCompletedTime = dt.microsecond
+            attackCompletedTime = int(time.time())
             result.update({attackName: {"start_time": attackStartTime, "end_time": attackCompletedTime,
                                         "result": attack_status}})
+            time.sleep(interval)
 
         return result;
     except Exception, j:
@@ -213,9 +213,12 @@ def main():
         return False;
 
     macAddress, gateway, broadcast_ip, iprange = getDeviceNetworkConfig(data);
-    blockPrint()
+    if data['blockPrint']:
+        blockPrint()
     ipToAttack = getIp(iprange, macAddress)
-
+    if ipToAttack is None:
+        log.info("device not available for %s " % macAddress)
+        return
     log.info('IP %s & macAddress %s is configured for the attacks' % (ipToAttack, macAddress))
     deviceConfig = {}
     defaultgateway = {"gateway-ip": gateway}

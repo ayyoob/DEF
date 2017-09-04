@@ -1,8 +1,10 @@
 {
-  "attack": ["ArpSpoof", "EntropyEstimation", "PortVulnerabilityTest" ,"PasswordAttack"],
+  "attack": ["PortVulnerabilityTest", "LandDoS", "TcpSyn", "PingOfDeath"],
   "interfaces": "eth0,en0",
-  "mac_address":"",
+  "mac_address":"EC:1A:59:79:F4:89",
   "default_gateway":"",
+  "interval_between_attacks_in_seconds": 10,
+  "blockPrint": true,
   "ArpSpoof": {
     "execution_timeout_in_seconds": 10,
     "tcpdump": true
@@ -13,39 +15,45 @@
   },
 
   "PortVulnerabilityTest": {
-    "port_range": "0-1024"
+    "port_range": "0-10",
+    "udp": false,
+    "optimization": "-T4 --max-retries 3 --min-parallelism 20 --stats-every 1m",
+    "result": {"tcp": {"filtered": [], "open": [53, 49153]}}
   },
 
   "DnSpoof": {
     "execution_timeout_in_seconds": 10,
-    "domain": "hamza.com",
+    "domain": "example.com",
     "poisoned_ip": "192.168.1.100"
   },
 
   "TcpConnectionFlood" : {
-    "max_connection_per_port" : 500
+    "max_connection_per_port" : 2000
   },
 
   "FakeServer": {
     "execution_timeout_in_seconds": 300,
-    "domain": "hamza.com",
+    "domain": "example.com",
     "poisoned_ip": "157.240.8.35",
     "tcpdump": false
   },
 
   "LandDoS": {
-    "packet_count": 1000000,
-    "data_size": 1000,
-    "interval": "u1",
-    "__comment__" : "interval u prefix is to denote micro seconds else it would be seconds, data size is in bytes"
+    "packet_count": 10,
+    "data_size": 100,
+    "interval": "1",
+    "tcpdump": false,
+    "file_prefix": "land_dos",
+    "vulnerability_validation": false,
+    "__comment__" : "interval -- u prefix is to denote micro seconds, default value is in seconds, data size is in bytes"
   },
 
   "TcpSyn": {
-    "execution_timeout_in_seconds": 60
+    "execution_timeout_in_seconds": 120
   },
 
   "PingOfDeath": {
-    "execution_timeout_in_seconds": 300
+    "execution_timeout_in_seconds": 120
   },
 
   "IcmpRedirection": {
