@@ -1,7 +1,7 @@
 {
   "attack": ["PortVulnerabilityTest", "LandDoS", "TcpSyn", "PingOfDeath", "TcpConnectionFlood", "UdpFlood", "Smurf", "Ssdp", "Snmp"],
   "interfaces": "eth0,en0",
-  "mac_address":"EC:1A:59:79:F4:89",
+  "mac_address":"",
   "default_gateway":"",
   "interval_between_attacks_in_seconds": 10,
   "blockPrint": true,
@@ -15,8 +15,8 @@
   },
 
   "PortVulnerabilityTest": {
-    "port_range": "0-10",
-    "udp": false,
+    "port_range": "0-65535",
+    "udp": true,
     "optimization": "-T4 --max-retries 3 --min-parallelism 20 --stats-every 1m",
     "result": {"tcp": {"filtered": [], "open": [53, 49153]}, "udp": {"filtered": [], "open": [53]}}
   },
@@ -70,7 +70,8 @@
   "Smurf": {
     "packet_count": 10,
     "tcpdump": true,
-    "file_prefix": "smurf"
+    "file_prefix": "smurf",
+    "type":"unicast"
   },
 
   "Ssdp": {

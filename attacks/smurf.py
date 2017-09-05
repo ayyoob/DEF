@@ -22,8 +22,12 @@ class Smurf(GenericAttack):
 
         target = self.device['ip']
         broadcast_addr = self.device['broadcast_ip']
-        ip_hdr = IP(dst=target)
-        icmpPacket = ip_hdr / ICMP()
+        if self.config['type'] == 'unicast':
+            ip_hdr = IP(dst=target)
+            icmpPacket = ip_hdr / ICMP()
+        else:
+            ip_hdr = IP(dst=broadcast_addr)
+            icmpPacket = ip_hdr / ICMP()
         initialPacketSize = 0
 
         packetCount = self.config['packet_count']
