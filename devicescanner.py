@@ -245,7 +245,7 @@ def main():
     file.write(str(deviceResult))
     file.close()
 
-    reportGenerator = report_generator.ReportGenerator(result)
-    reportGenerator.generate(data, deviceConfig, result)
+    reportGenerator = report_generator.ReportGenerator(data, deviceConfig, result)
+    reportGenerator.generate()
 
 main()

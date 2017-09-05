@@ -1,11 +1,6 @@
-
+import html
 import abc
 import logging
-import os
-from re import search
-from subprocess import Popen
-from commands import getoutput
-import time
 """ Abstract Attack Definition.
 """
 log = logging.getLogger(__name__)
@@ -15,14 +10,37 @@ class ReportGenerator(object):
     __metaclass__ = abc.ABCMeta
 
     def __init__(self, attackConfig, deviceConfig, result):
-        if attackName is None and attackConfig is None and deviceConfig is None:
-            pass
         # meta
         self.config = attackConfig
         self.device = deviceConfig
         self.result =result
 
 
+
     def generate(self):
-        pass
+        filename = 'results/' + self.device['time'] + '_device_result.html'
+        f = open(filename, 'w')
+        result=self.result
+        deviceConfig=self.device
+        header = ['Mac Address'] + result.keys()
+        values = []
+        values.append(deviceConfig['macAddress'])
+        for x in result.keys():
+            if result[x]["result"] is not None:
+                val = '\n'.join('{}: {}'.format(key, val) for key, val in result[x]["result"].items())
+            else:
+                val = ""
+            values.append(val)
+        table_data = [
+            header,
+            values
+        ]
+        htmlcode = html.table(table_data)
+        print htmlcode
+        f.write(htmlcode)
+        f.write('<p>')
+        print '-' * 79
+
+        f.close()
+        log.info('\nOpen the file %s in a browser to see the result.' % filename)
 

@@ -116,3 +116,4 @@ target
 *.log
 *result.json
 *cap.pcap
+*result.html
