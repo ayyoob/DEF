@@ -15,8 +15,6 @@ class Ssdp(GenericAttack):
 
     def initialize(self, result):
         target = self.device['ip']
-        global arpspoof
-        arpspoof = ArpSpoof("ArpSpoof", self.config, self.device)
 
         if self.device["vulnerable_ports"] is None:
             result = {"status": "no open ports"}
@@ -31,21 +29,42 @@ class Ssdp(GenericAttack):
             return
 
         self.running = True
-        arp_status = {}
-        tarp = threading.Thread(target=arpspoof.initialize, args=(arp_status,))
-        tarp.start()
+        file_prefix = self.config["file_prefix"]
+        filename = 'results/' + self.device['time'] + '/' + file_prefix + '.pcap'
+        global proc
+        proc = subprocess.Popen(['tcpdump', 'udp and port 5001', '-w',
+                                 filename], stdout=subprocess.PIPE)
         time.sleep(5)
 
         # udpS = threading.Thread(target=self.udpServer)
         # udpS.start()
         # time.sleep(2)
 
+        destAddr = '239.255.255.250'
+        if self.config['type'] == 'unicast':
+            destAddr = target
+
+        #determine packet size
+        SSDP_ADDR = destAddr; #
+        SSDP_PORT = 53;
+        SSDP_MX = 1
+        SSDP_ST = "ssdp:all"
+
+        payload = "M-SEARCH * HTTP/1.1\r\n" + \
+                  "HOST: %s:%d\r\n" % (SSDP_ADDR, SSDP_PORT) + \
+                  "MAN: \"ssdp:discover\"\r\n" + \
+                  "MX: %d\r\n" % (SSDP_MX,) + \
+                  "ST: %s\r\n" % (SSDP_ST,) + "\r\n";
+        spoofed_packet = IP(dst=SSDP_ADDR) / UDP(sport=5001, dport=SSDP_PORT) / payload
+
+
         packetCount = self.config['packet_count']
+        initialPacketSize = packetCount * len(spoofed_packet)
 
         for port in self.device["vulnerable_ports"]["udp"]["open"]:
             for x in range(0, packetCount):
-                SSDP_ADDR = "239.255.255.250";
-                SSDP_PORT = 1900;
+                SSDP_ADDR = destAddr
+                SSDP_PORT = port;
                 SSDP_MX = 1
                 SSDP_ST = "ssdp:all"
 
@@ -54,12 +73,12 @@ class Ssdp(GenericAttack):
                           "MAN: \"ssdp:discover\"\r\n" + \
                           "MX: %d\r\n" % (SSDP_MX,) + \
                           "ST: %s\r\n" % (SSDP_ST,) + "\r\n";
-                spoofed_packet = IP(dst=target) / UDP(sport=5001, dport=port) / payload
+                spoofed_packet = IP(dst=SSDP_ADDR) / UDP(sport=5001, dport=SSDP_PORT) / payload
                 send(spoofed_packet)
                 time.sleep(0.5)
 
-        arpspoof.shutdown()
-        tarp.join()
+        time.sleep(5)
+        self.terminateDump()
         # udpS.join()
 
         file_prefix = self.config["file_prefix"]
@@ -67,43 +86,28 @@ class Ssdp(GenericAttack):
         pcap = rdpcap(filename)
         sessions = pcap.sessions()
         vulnerable = False
+        response = 0
         for session in sessions:
             for packet in sessions[session]:
                 try:
-                    if packet['IP'].dst == target and packet['SSDP'].type == 8:
-                        initialPacketSize = len(packet)
-
-                    if packet['IP'].src == target and packet['SSDP'].type == 0 and (not initialPacketSize == 0):
-                        result.update({"amplification_factor": len(packet) / initialPacketSize})
+                    if packet['IP'].src == target:
                         vulnerable = True
+                        response = response + len(packet)
                 except:
                     pass
 
         if vulnerable:
             result.update({"status": "vulnerable"})
+            result.update({"amplification_factor": response / initialPacketSize})
         else:
             result.update({"status": "not_vulnerable"})
         return
 
-    def udpServer(self):
-        # Create a TCP/IP socket
-        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-
-        # Bind the socket to the port
-        server_address = ('localhost', 1900)
-        sock.bind(server_address)
-        while self.running:
-            data, address = sock.recvfrom(4096)
-            #
-            # print >> sys.stderr, 'received %s bytes from %s' % (len(data), address)
-            # print >> sys.stderr, data
-
-            if data:
-                sent = sock.sendto(data, address)
+    def terminateDump(self):
+        global proc
+        proc.terminate()
 
     def shutdown(self):
-        global arpspoof
-        arpspoof.shutdown()
         self.running = False
 
     def prerequisite(self):

@@ -206,19 +206,11 @@ def getDeviceNetworkConfig(data):
 
     return macAddress, gateway, broadcast_ip, iprange
 
-def main():
-    log.info('----- IoT Device Network Exploitation Framework -----')
-    with open('config.json') as data_file:
-        data = json.load(data_file)
+def configureDevice(macAddress, data):
+    global gateway
+    global broadcast_ip
+    global iprange
 
-    status, invalidAttack = validatePrerequisite(data)
-    if not status:
-        log.error("%s prerequisite is not configured" % invalidAttack)
-        return False;
-
-    macAddress, gateway, broadcast_ip, iprange = getDeviceNetworkConfig(data);
-    if data['blockPrint']:
-        blockPrint()
     ipToAttack = getIp(iprange, macAddress)
     if ipToAttack is None:
         log.info("device not available for %s " % macAddress)
@@ -236,19 +228,48 @@ def main():
     deviceConfig.update(defaultgateway)
     deviceConfig.update(broadcast)
     deviceConfig.update(testTimeStamp)
-
-
     result = performAttacks(data, deviceConfig, iprange)
 
     deviceConfig.update({"attacks": result})
     deviceConfig.update({"setup": data})
-    log.info(deviceConfig)
-    file = open("results/" + logdatetime + "/result.json", "w")
-    deviceResult = json.dumps(deviceConfig, indent=4)
-    file.write(str(deviceResult))
-    file.close()
+    print(deviceConfig)
+    return deviceConfig
 
-    reportGenerator = report_generator.ReportGenerator(data, deviceConfig, result)
-    reportGenerator.generate()
+
+def main():
+    log.info('----- IoT Device Network Exploitation Framework -----')
+    with open('config.json') as data_file:
+        data = json.load(data_file)
+
+    status, invalidAttack = validatePrerequisite(data)
+    if not status:
+        log.error("%s prerequisite is not configured" % invalidAttack)
+        return False;
+    deviceResults = []
+    global gateway
+    global broadcast_ip
+    global iprange
+    if data['blockPrint']:
+        blockPrint()
+
+    macAddresses, gateway, broadcast_ip, iprange = getDeviceNetworkConfig(data);
+
+    if isinstance(macAddresses, list):
+        for macAddress in macAddresses:
+            deviceConfig = configureDevice(macAddress, data)
+            if deviceConfig is not None:
+                deviceResults.append(deviceConfig)
+    else:
+        deviceConfig = configureDevice(macAddresses, data)
+        if deviceConfig is not None:
+            deviceResults.append(deviceConfig)
+    if len(deviceResults) != 0:
+        file = open("results/" + logdatetime + "/result.json", "w")
+        deviceResultsJson = json.dumps(deviceResults, indent=4)
+        file.write(str(deviceResultsJson))
+        file.close()
+
+        reportGenerator = report_generator.ReportGenerator(data, deviceResults, logdatetime)
+        reportGenerator.generate()
 
 main()

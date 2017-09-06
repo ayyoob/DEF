@@ -11,32 +11,33 @@ class ReportGenerator(object):
 
     __metaclass__ = abc.ABCMeta
 
-    def __init__(self, attackConfig, deviceConfig, result):
+    def __init__(self, attackConfig, results, time):
         # meta
         self.config = attackConfig
-        self.device = deviceConfig
-        self.result =result
-
-
+        self.results =results
+        self.time = time
 
     def generate(self):
-        filename = 'results/' + self.device['time'] + '/device_result.html'
+        filename = 'results/' + self.time + '/device_result.html'
         f = open(filename, 'w')
-        result=self.result
-        deviceConfig=self.device
-        header = ['Mac Address'] + result.keys()
-        values = []
-        values.append(deviceConfig['macAddress'])
-        for x in result.keys():
-            if result[x]["result"] is not None:
-                val = '\n'.join('{}: {}'.format(key, val) for key, val in result[x]["result"].items())
-            else:
-                val = ""
-            values.append(val)
-        table_data = [
-            header,
-            values
-        ]
+        header = ['Mac Address']
+        header.extend(self.config['attack'])
+
+        table_data = [header]
+        resultLen = len(self.results)
+        for deviceResult in self.results:
+
+            value = []
+            value.append(deviceResult['macAddress'])
+            result = deviceResult['attacks']
+            for x in result.keys():
+                if result[x]["result"] is not None:
+                    val = '\n'.join('{}: {}'.format(key, val) for key, val in result[x]["result"].items())
+                else:
+                    val = ""
+                value.append(val)
+            table_data.append(value)
+
         htmlcode = html.table(table_data)
         print htmlcode
         f.write(htmlcode)
