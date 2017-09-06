@@ -15,6 +15,8 @@ class Ssdp(GenericAttack):
 
     def initialize(self, result):
         target = self.device['ip']
+        global arpspoof
+        arpspoof = ArpSpoof("ArpSpoof", self.config, self.device)
 
         if self.device["vulnerable_ports"] is None:
             result = {"status": "no open ports"}
@@ -27,8 +29,7 @@ class Ssdp(GenericAttack):
         if "open" not in self.device["vulnerable_ports"]["udp"].keys():
             result = {"status": "no open ports"}
             return
-        global arpspoof
-        arpspoof = ArpSpoof("ArpSpoof", self.config, self.device)
+
         self.running = True
         arp_status = {}
         tarp = threading.Thread(target=arpspoof.initialize, args=(arp_status,))
@@ -62,7 +63,7 @@ class Ssdp(GenericAttack):
         # udpS.join()
 
         file_prefix = self.config["file_prefix"]
-        filename = 'results/' + self.device['time'] + '_' + file_prefix + '_cap.pcap'
+        filename = 'results/' + self.device['time'] + '/' + file_prefix + '.pcap'
         pcap = rdpcap(filename)
         sessions = pcap.sessions()
         vulnerable = False

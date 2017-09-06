@@ -1,7 +1,7 @@
 {
   "attack": ["PortVulnerabilityTest", "LandDoS", "TcpSyn", "PingOfDeath", "TcpConnectionFlood", "UdpFlood", "Smurf", "Ssdp", "Snmp"],
   "interfaces": "eth0,en0",
-  "mac_address":"",
+  "mac_address":"EC:1A:59:79:50:1D",
   "default_gateway":"",
   "interval_between_attacks_in_seconds": 10,
   "blockPrint": true,
@@ -15,10 +15,10 @@
   },
 
   "PortVulnerabilityTest": {
-    "port_range": "0-65535",
-    "udp": true,
-    "optimization": "-T4 --max-retries 3 --min-parallelism 20 --stats-every 1m",
-    "result": {"tcp": {"filtered": [], "open": [53, 49153]}, "udp": {"filtered": [], "open": [53]}}
+    "port_range": "0-6",
+    "udp": false,
+    "optimization": "-T4 --max-retries 2 --max-rtt-timeout 300ms --min-parallelism 20 --stats-every 1m",
+    "result": {"tcp": {"filtered": [], "open": [53, 49153]}, "udp": {"filtered": [], "open": [53, 1900, 3080, 3081, 3082, 3179, 3229, 3236, 3619, 4050, 4052, 4053, 4054, 4055, 4289, 4996, 4997, 4998, 14675]}}
   },
 
   "DnSpoof": {

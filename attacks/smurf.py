@@ -38,7 +38,7 @@ class Smurf(GenericAttack):
         tarp.join()
 
         file_prefix = self.config["file_prefix"]
-        filename = 'results/' + self.device['time'] + '_' + file_prefix + '_cap.pcap'
+        filename = 'results/' + self.device['time'] + '/' + file_prefix + '.pcap'
         pcap = rdpcap(filename)
         sessions = pcap.sessions()
         vulnerable= False

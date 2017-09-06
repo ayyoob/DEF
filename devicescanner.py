@@ -2,7 +2,7 @@ import socket
 
 from util import ioutil
 from util import report_generator
-import nmap
+from lib import nmap_python
 from os import getuid, _exit
 import threading
 import json
@@ -20,7 +20,7 @@ if int(getuid()) > 0:
     print('Please run as root.')
     _exit(1)
 
-logdatetime = strftime("%Y_%m_%d_%H_%M_%S_", gmtime())
+logdatetime = strftime("%Y_%m_%d_%H_%M_%S", gmtime())
 def setup_logging(default_path='logging.json', default_level=logging.INFO, env_key='LOG_CFG'):
     """Setup logging configuration
      """
@@ -31,8 +31,11 @@ def setup_logging(default_path='logging.json', default_level=logging.INFO, env_k
     if os.path.exists(path):
         with open(path, 'rt') as f:
             config = json.load(f)
-        config["handlers"]["info_file_handler"]["filename"] = "logs/" + logdatetime + \
-                                                              config["handlers"]["info_file_handler"]["filename"]
+        try:
+            os.makedirs('./results/' + logdatetime)
+        except OSError:
+            pass
+        config["handlers"]["info_file_handler"]["filename"] = "results/" + logdatetime + "/" + config["handlers"]["info_file_handler"]["filename"]
         logging.config.dictConfig(config)
     else:
         logging.basicConfig(level=default_level)
@@ -140,7 +143,7 @@ def performAttacks(data, deviceConfig, iprange):
         return result;
 
 def getIp(iprange, macAddress):
-    nm = nmap.PortScanner()
+    nm = nmap_python.PortScanner()
     nm.scan(iprange, arguments='-sP -n')
     for h in nm.all_hosts():
         if 'mac' in nm[h]['addresses']:
@@ -181,7 +184,7 @@ def getDeviceNetworkConfig(data):
                 iprange = choice
 
             log.info("IP Scanner started for range %s, Please Wait...." % iprange)
-            nm = nmap.PortScanner()
+            nm = nmap_python.PortScanner()
             nm.scan(iprange, arguments='-sP -n')
             for h in nm.all_hosts():
                 if 'mac' in nm[h]['addresses']:
@@ -240,7 +243,7 @@ def main():
     deviceConfig.update({"attacks": result})
     deviceConfig.update({"setup": data})
     log.info(deviceConfig)
-    file = open("results/" + logdatetime + "result.json", "w")
+    file = open("results/" + logdatetime + "/result.json", "w")
     deviceResult = json.dumps(deviceConfig, indent=4)
     file.write(str(deviceResult))
     file.close()

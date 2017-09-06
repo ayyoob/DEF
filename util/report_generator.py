@@ -1,6 +1,8 @@
-import html
 import abc
 import logging
+
+from lib import html
+
 """ Abstract Attack Definition.
 """
 log = logging.getLogger(__name__)
@@ -18,7 +20,7 @@ class ReportGenerator(object):
 
 
     def generate(self):
-        filename = 'results/' + self.device['time'] + '_device_result.html'
+        filename = 'results/' + self.device['time'] + '/device_result.html'
         f = open(filename, 'w')
         result=self.result
         deviceConfig=self.device

@@ -104,7 +104,7 @@ ENV/
 .DS_Store
 
 # Ignore everything in this directory
-target
+results
 .classpath
 .settings
 .project

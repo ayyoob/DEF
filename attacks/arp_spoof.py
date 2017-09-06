@@ -28,7 +28,7 @@ class ArpSpoof(GenericAttack):
         if ("file_prefix" in self.config.keys()):
             file_prefix = self.config["file_prefix"]
 
-        filename = 'results/' + self.device['time'] + '_' + file_prefix + '_cap.pcap'
+        filename = 'results/' + self.device['time'] + '/' + file_prefix + '.pcap'
         self.enable_packet_forwarding()
         if self.config['tcpdump']:
             global proc
