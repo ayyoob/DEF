@@ -30,7 +30,7 @@ class Ssdp(GenericAttack):
 
         self.running = True
         file_prefix = self.config["file_prefix"]
-        filename = 'results/' + self.device['time'] + '/' + file_prefix + '.pcap'
+        filename = 'results/' + self.device['time'] + '/' + file_prefix + self.device['macAddress']   + '.pcap'
         global proc
         proc = subprocess.Popen(['tcpdump', 'udp and port 5001', '-w',
                                  filename], stdout=subprocess.PIPE)
@@ -82,7 +82,7 @@ class Ssdp(GenericAttack):
         # udpS.join()
 
         file_prefix = self.config["file_prefix"]
-        filename = 'results/' + self.device['time'] + '/' + file_prefix + '.pcap'
+        filename = 'results/' + self.device['time'] + '/' + file_prefix + self.device['macAddress']  + '.pcap'
         pcap = rdpcap(filename)
         sessions = pcap.sessions()
         vulnerable = False

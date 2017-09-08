@@ -11,7 +11,7 @@ class EntropyEstimation(GenericAttack):
 
     def initialize(self, result):
         self.running = True
-        filename = 'results/' + self.device['time'] + '/arp.pcap'
+        filename = 'results/' + self.device['time'] + self.device['macAddress'] + '/arp.pcap'
         # proccess pcap for entropy estimation
         log.info(filename)
 

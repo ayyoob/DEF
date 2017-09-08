@@ -63,7 +63,7 @@ class LandDoS(GenericAttack):
         vulnerable = False
         if self.config['vulnerability_validation']:
             file_prefix = self.config["file_prefix"]
-            filename = 'results/' + self.device['time'] + '/' + file_prefix + '.pcap'
+            filename = 'results/' + self.device['time'] + '/' + file_prefix + self.device['macAddress'] + '.pcap'
             pcap = rdpcap(filename)
             sessions = pcap.sessions()
             for session in sessions:

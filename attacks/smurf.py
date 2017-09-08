@@ -24,7 +24,7 @@ class Smurf(GenericAttack):
         icmpPacket = ip_hdr / ICMP()
 
         file_prefix = self.config["file_prefix"]
-        filename = 'results/' + self.device['time'] + '/' + file_prefix + '.pcap'
+        filename = 'results/' + self.device['time'] + '/' + file_prefix + self.device['macAddress'] + '.pcap'
         global proc
         proc = subprocess.Popen(['tcpdump', '-w', filename], stdout=subprocess.PIPE)
         time.sleep(5)

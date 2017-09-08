@@ -47,7 +47,7 @@ class Snmp(GenericAttack):
         tarp.join()
 
         file_prefix = self.config["file_prefix"]
-        filename = 'results/' + self.device['time'] + '/' + file_prefix + '.pcap'
+        filename = 'results/' + self.device['time'] + '/' + file_prefix + self.device['macAddress'] + '.pcap'
         pcap = rdpcap(filename)
         sessions = pcap.sessions()
         vulnerable = False

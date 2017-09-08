@@ -28,10 +28,11 @@ class ReportGenerator(object):
         for deviceResult in self.results:
 
             value = []
-            value.append(deviceResult['macAddress'])
             result = deviceResult['attacks']
-            for x in result.keys():
-                if result[x]["result"] is not None:
+            for x in header:
+                if x == 'Mac Address':
+                    val = deviceResult['macAddress']
+                elif result[x]["result"] is not None:
                     val = '\n'.join('{}: {}'.format(key, val) for key, val in result[x]["result"].items())
                 else:
                     val = ""
