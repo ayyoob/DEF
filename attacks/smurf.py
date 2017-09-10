@@ -45,7 +45,7 @@ class Smurf(GenericAttack):
         for session in sessions:
             for packet in sessions[session]:
                 try:
-                    if packet['IP'].dst == target and packet['ICMP'].type==8:
+                    if packet['IP'].dst == sender and packet['ICMP'].type==8:
                             initialPacketSize = initialPacketSize + len(packet)
 
                     if packet['IP'].src == target and packet['ICMP'].type==0:

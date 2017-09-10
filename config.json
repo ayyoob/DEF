@@ -1,12 +1,12 @@
 {
-  "attack": ["ArpSpoof"],
+  "attack": ["PortVulnerabilityTest", "Smurf"],
   "interfaces": "eth0,en0",
   "mac_address":["EC:1A:59:79:50:1D"],
   "default_gateway":"",
   "interval_between_attacks_in_seconds": 10,
   "blockPrint": true,
   "ArpSpoof": {
-    "execution_timeout_in_seconds": 1000,
+    "execution_timeout_in_seconds": 120,
     "tcpdump": true
   },
 
@@ -18,13 +18,16 @@
     "port_range": "0-6",
     "udp": false,
     "optimization": "--min-parallelism 100 --stats-every 1m",
-    "EC:1A:59:79:50:1D": {"tcp": {"filtered": [], "open": [53, 49154]}, "udp": {"filtered": [], "open": [53, 1900]}},
-    "EC:1A:59:79:F4:89": {"tcp": {"filtered": [], "open": [53, 49154]}, "udp": {"filtered": [], "open": [53, 1900]}}
+    "CC:FA:00:F0:54:09": "",
+    "EC:1A:59:79:50:1D": {"tcp": {"filtered": [], "open": [53, 49154]}, "udp": {"filtered": [], "open": [53, 1900,3208,3209,3233,3236,14675]}},
+    "EC:1A:59:79:F4:89": {"tcp": {"filtered": [], "open": [53, 49154]}, "udp": {"filtered": [], "open": [53, 1900,3208,3209,3233,3236,14675]}}
+
   },
 
   "Replay": {
-    "file_path": "",
-    "interval_in_seconds": 1
+    "file_path": "results/2017_09_09_13_18_13/arpCC:FA:00:F0:54:09.pcap",
+    "interval_in_seconds": 0.4,
+    "source_ip": ""
   },
 
   "DnSpoof": {
@@ -38,9 +41,9 @@
   },
 
   "FakeServer": {
-    "execution_timeout_in_seconds": 300,
-    "domain": "example.com",
-    "poisoned_ip": "157.240.8.35",
+    "execution_timeout_in_seconds": 60,
+    "domain": "api.xwemo.com",
+    "poisoned_ip": "93.184.216.34",
     "tcpdump": true,
     "file_prefix": "fake_server"
   },
@@ -84,7 +87,7 @@
     "packet_count": 1,
     "tcpdump": true,
     "file_prefix": "ssdp",
-    "type":"unicast"
+    "type":"broadcast"
   },
 
   "Snmp": {

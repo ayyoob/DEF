@@ -13,7 +13,10 @@ class Replay(GenericAttack):
     def initialize(self, result):
         self.running = True
         filename = self.config["file_path"]
+
         target = self.device['ip']
+        if self.config['source_ip'] != '':
+            target = self.config['source_ip']
         interval = self.config["interval_in_seconds"];
 
         if filename == "" or (not os.path.isfile(filename)):
@@ -22,13 +25,15 @@ class Replay(GenericAttack):
 
         pcap = rdpcap(filename)
         sessions = pcap.sessions()
+        log.info("source %s configured" % target)
         for session in sessions:
             for packet in sessions[session]:
                 try:
-                    print packet['SSNP']
                     if packet['IP'].src == target:
+                        log.info("Packet Sent")
                         send(packet)
-                        time.sleep(interval)
+                        if interval > 0:
+                            time.sleep(interval)
                 except:
                     pass
         result.update({"replay_status:":True});

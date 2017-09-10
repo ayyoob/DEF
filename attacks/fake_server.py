@@ -34,14 +34,13 @@ class FakeServer(GenericAttack):
 
 
     def shutdown(self):
+        self.running = False
         global arpspoof
         global dnsspoof
         global tarp
         global tdns
         arpspoof.shutdown()
         dnsspoof.shutdown()
-        time.sleep(5)
-        self.running = False
 
 
 
