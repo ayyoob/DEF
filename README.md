@@ -2,11 +2,10 @@
 Device Exploitation Framework
 
 This can be setup only in Linux OS.
-git clone --recursive URL
 # Installation
 
 ```sh
-$ git clone https://github.com/ayyoob/DEF.git
+$ git clone  --recursive https://github.com/ayyoob/DEF.git
 $ cd DEF
 $ pip install python-nmap
 $ pip install netifaces
