@@ -1,13 +1,14 @@
 {
-  "attack": ["PortVulnerabilityTest", "Smurf"],
+  "attack": ["PasswordAttack"],
   "interfaces": "eth0,en0",
-  "mac_address":["EC:1A:59:79:50:1D"],
+  "mac_address":["EC:1A:59:79:F4:89"],
   "default_gateway":"",
   "interval_between_attacks_in_seconds": 10,
-  "blockPrint": true,
+  "blockPrint": false,
   "ArpSpoof": {
     "execution_timeout_in_seconds": 120,
-    "tcpdump": true
+    "tcpdump": true,
+    "gateway_ip":""
   },
 
   "EntropyEstimation": {

