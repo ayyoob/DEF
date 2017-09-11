@@ -2,7 +2,7 @@
 Device Exploitation Framework
 
 This can be setup only in Linux OS.
-
+git clone --recursive URL
 # Installation
 
 ```sh
