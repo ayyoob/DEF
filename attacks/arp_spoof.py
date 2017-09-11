@@ -18,7 +18,11 @@ class ArpSpoof(GenericAttack):
 
     def initialize(self, result):
         self.running = True
-        self.respoofer(self.device["ip"], self.device["gateway-ip"])
+        gateway = self.device["gateway-ip"]
+        if self.config["gateway_ip"] != "":
+            gateway = self.config["gateway_ip"]
+
+        self.respoofer(self.device["ip"], gateway)
         return
 
     def respoofer(self, targetIp, gatewayIp):
