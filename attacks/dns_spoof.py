@@ -124,8 +124,8 @@ class DnsSpoof(GenericAttack):
                 queue.run()  # Main loop
             except KeyboardInterrupt:
                 queue.unbind()
-                os.system('iptables -F')
-                os.system('iptables -X')
+                # os.system('iptables -F')
+                # os.system('iptables -X')
         return
 
     def test_stop(self, pkt):
@@ -144,8 +144,8 @@ class DnsSpoof(GenericAttack):
             global queue
             try:
                 queue.unbind()
-                os.system('iptables -F')
-                os.system('iptables -X')
+                # os.system('iptables -F')
+                # os.system('iptables -X')
             except Exception, j:
                 log.error('Error unbinding DNS' % (j, traceback.format_exc()))
                 pass

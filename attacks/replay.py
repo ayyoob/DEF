@@ -4,7 +4,7 @@ import logging
 from scapy.all import *
 import os
 import os.path
-
+import json
 log = logging.getLogger(__name__)
 
 
@@ -38,7 +38,16 @@ class Replay(GenericAttack):
                         packetInfo.update({"TCP.sport": packet['TCP'].sport})
                         packetInfo.update({"TCP.dport": packet['TCP'].dport})
                         packetInfo.update({"Raw.load": packet['Raw'].load})
-                        packetInfos.append(packetInfo)
+
+                        skip = False
+                        for packetx in packetInfos:
+                            if packetx["IP.src"] == packetInfo["IP.src"] and packetx["Raw.load"] == packetInfo["Raw.load"]:
+                                skip = True
+                        if not skip:
+                            # print (packetInfo)
+                            # print ("**************************************************\n\n")
+                            # packet.show()
+                            packetInfos.append(packetInfo)
 
                 except:
                     pass
@@ -56,7 +65,12 @@ class Replay(GenericAttack):
         #                     time.sleep(interval)
         #         except:
         #             pass
-        result.update({"replay_status:": True, "packetInfo": packetInfos});
+        file = open("results/" + self.device['time'] + "/activity.json", "w")
+        deviceResultsJson = json.dumps(packetInfos, indent=4)
+        file.write(str(deviceResultsJson))
+        file.close()
+
+        result.update({"replay_status:": True});
         return
 
     def shutdown(self):

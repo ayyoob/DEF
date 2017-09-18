@@ -198,15 +198,16 @@ def getDeviceNetworkConfig(data):
             gateway = defaultGatewayIP;
         macAddress = macAddressToAttack
     else:
-        defaultGateway = data['default_gateway']
-        if defaultGateway is None or defaultGateway == "":
-            gateway = netifaces.gateways()['default'].values()[0][0]
-        else:
-            gateway = defaultGateway
+        gateway = netifaces.gateways()['default'].values()[0][0]
+        # defaultGateway = data['default_gateway']
+        # if defaultGateway is None or defaultGateway == "":
+        #
+        # else:
+        #     gateway = defaultGateway
 
     return macAddress, gateway, broadcast_ip, iprange
 
-def configureDevice(macAddress, data):
+def setupDevice(macAddress, data):
     global gateway
     global broadcast_ip
     global iprange
@@ -218,6 +219,9 @@ def configureDevice(macAddress, data):
     log.info('IP %s & macAddress %s is configured for the attacks' % (ipToAttack, macAddress))
     deviceConfig = {}
     defaultgateway = {"gateway-ip": gateway}
+    targetDevice = {"target-ip": gateway}
+    if (data["mode"]=="d2d"):
+        targetDevice = {"target-ip": getIp(iprange ,data["d2d-target-macAddress"])}
     macAddress = {"macAddress": macAddress}
     broadcast = {"broadcast_ip": broadcast_ip}
     testTimeStamp = {"time": logdatetime}
@@ -228,6 +232,7 @@ def configureDevice(macAddress, data):
     deviceConfig.update(defaultgateway)
     deviceConfig.update(broadcast)
     deviceConfig.update(testTimeStamp)
+    deviceConfig.update(targetDevice)
     result = performAttacks(data, deviceConfig, iprange)
 
     deviceConfig.update({"attacks": result})
@@ -256,11 +261,11 @@ def main():
 
     if isinstance(macAddresses, list):
         for macAddress in macAddresses:
-            deviceConfig = configureDevice(macAddress, data)
+            deviceConfig = setupDevice(macAddress, data)
             if deviceConfig is not None:
                 deviceResults.append(deviceConfig)
     else:
-        deviceConfig = configureDevice(macAddresses, data)
+        deviceConfig = setupDevice(macAddresses, data)
         if deviceConfig is not None:
             deviceResults.append(deviceConfig)
     if len(deviceResults) != 0:

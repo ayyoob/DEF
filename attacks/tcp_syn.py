@@ -73,8 +73,8 @@ class TcpSyn(GenericAttack):
         return
 
     def shutdown(self):
-        os.system('iptables -F')
-        os.system('iptables -X')
+        # os.system('iptables -F')
+        # os.system('iptables -X')
         self.running = False
 
     def prerequisite(self):

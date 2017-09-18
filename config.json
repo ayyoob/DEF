@@ -1,14 +1,16 @@
 {
-  "attack": ["Replay"],
+  "attack": ["PortVulnerabilityTest", "TcpConnectionFlood", "LandDoS", "TcpSyn", "PingOfDeath", "UdpFlood", "Smurf", "Ssdp", "Snmp", "PasswordAttack"],
   "interfaces": "eth0,en0",
-  "mac_address":["EC:1A:59:79:F4:89"],
-  "default_gateway":"",
+  "mac_address":["EC:1A:59:79:50:1D"],
+  "mode":"d2s",
+  "d2d-target-macAddress":"CC:FA:00:F0:54:09",
   "interval_between_attacks_in_seconds": 10,
   "blockPrint": false,
   "ArpSpoof": {
-    "execution_timeout_in_seconds": 60,
+    "execution_timeout_in_seconds": 30,
     "tcpdump": true,
-    "gateway_ip":""
+    "delay_in_seconds": 1,
+    "warmup_in_seconds": 2
   },
 
   "EntropyEstimation": {
@@ -26,7 +28,7 @@
   },
 
   "Replay": {
-    "file_path": "results/2017_09_11_08_23_13/arpCC:FA:00:F0:54:09.pcap",
+    "file_path": "results/2017_09_11_22_04_03/arpCC:FA:00:F0:54:09.pcap",
     "interval_in_seconds": 0.4,
     "source_ip": ""
   },

