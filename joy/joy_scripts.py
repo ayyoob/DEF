@@ -1,26 +1,9 @@
-import logging
-from generic_attack import *
-import logging
-log = logging.getLogger(__name__)
+import csv
+import subprocess
+import json
+import gzip
 
-
-class EntropyEstimation(GenericAttack):
-
-    def __init__(self, attackName, attackConfig, deviceConfig):
-        super(EntropyEstimation, self).__init__(attackName, attackConfig, deviceConfig)
-
-    def initialize(self, result):
-        self.running = True
-        filename = 'results/' + self.device['time'] + self.device['macAddress'] + '/arp.pcap'
-        # proccess pcap for entropy estimation
-        log.info(filename)
-	
-	byte_entropy = meta_data_extract(self.config("mac_address"), filename)
-	results.update({"byte_entropy": byte_entropy})
-
-
-
-     def meta_data_extract(MAC_addr, pcap_dir):
+def meta_data_extract(MAC_addr, pcap_dir):
 	output = "output=" + str(MAC_addr) + ".gz"
 	mac = "bpf = ether host " + str(MAC_addr)
 	input = str(pcap_dir)
@@ -38,15 +21,14 @@ class EntropyEstimation(GenericAttack):
 			flow.append(json.loads(file[flow_counter]))
 			if flow_counter != 0:
 				byte_entropy_per_flow.append(byte_entropy(flow[flow_counter]))
-#				cipher_suite(flow)
+				cipher_suite(flow)
 		except:
 			pass
 #		print byte_entropy_per_flow
 #		quit()
 		flow_counter += 1
-	return byte_entropy_per_flow
-
-    def byte_entropy(flow):
+#	print byte_entropy_per_flow
+def byte_entropy(flow):
 	if flow.has_key("be"):
 		flow_info = {}
 		flow_info["source address"] = flow["sa"]
@@ -58,10 +40,18 @@ class EntropyEstimation(GenericAttack):
 		return
 	return flow_info
 
-    def shutdown(self):
-        self.running = False
+def cipher_suite(flow):
+	if flow.has_key("tls"):
+		if isinstance(flow["tls"], dict):
+			if flow["tls"].has_key("cs"):
+				print "yes"
+				print flow["tls"]["cs"]
+			else:
+				return
+		else:
+			return
+	else:
+		return
+	return
 
-    def prerequisite(self):
-        return ["ArpSpoof"]
-
-
+meta_data_extract("70:88:6b:10:0f:c6", "16-09-28.pcap")
