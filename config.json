@@ -7,7 +7,7 @@
   "interval_between_attacks_in_seconds": 10,
   "blockPrint": false,
   "ArpSpoof": {
-    "execution_timeout_in_seconds": 30,
+    "execution_timeout_in_seconds": 45,
     "tcpdump": true,
     "delay_in_seconds": 1,
     "warmup_in_seconds": 2
@@ -40,7 +40,8 @@
   },
 
   "TcpConnectionFlood" : {
-    "execution_timeout_in_seconds": 180
+    "execution_timeout_in_seconds": 180,
+    "continuous_attack": true
   },
 
   "FakeServer": {
@@ -62,16 +63,19 @@
   },
 
   "TcpSyn": {
-    "execution_timeout_in_seconds": 120
+    "execution_timeout_in_seconds": 120,
+    "continuous_attack": true
   },
 
   "PingOfDeath": {
-    "execution_timeout_in_seconds": 120
+    "execution_timeout_in_seconds": 120,
+    "continuous_attack": true
   },
 
   "UdpFlood": {
     "execution_timeout_in_seconds": 120,
-    "packet_size_in_bytes": 5
+    "packet_size_in_bytes": 5,
+    "continuous_attack": true
   },
 
   "IcmpRedirection": {

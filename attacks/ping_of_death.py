@@ -13,6 +13,8 @@ class PingOfDeath(GenericAttack):
     def initialize(self, result):
         self.running = True
         target = self.device['ip']
+        global continuousAttack
+        continuousAttack = self.config['continuous_attack']
 
         tstatus = threading.Thread(target=self.deviceStatus, args=(result,))
         tstatus.start()
@@ -44,7 +46,9 @@ class PingOfDeath(GenericAttack):
                 time.sleep(0.1)
                 if detected == max:
                     result.update({"status": "vulnerable"})
-                    self.running = False
+                    global continuousAttack
+                    if not continuousAttack:
+                        self.running = False
                     return
         result.update({"status": "not_vulnerable"})
 

@@ -12,6 +12,8 @@ class UdpFlood(GenericAttack):
     def initialize(self, result):
         self.running = True
         target = self.device['ip']
+        global continuousAttack
+        continuousAttack = self.config['continuous_attack']
 
         if self.device["vulnerable_ports"] is None:
             result.update({"status": "no open ports"})
@@ -56,7 +58,9 @@ class UdpFlood(GenericAttack):
                 time.sleep(0.1)
                 if detected == max:
                     result.update({"status": "vulnerable"})
-                    self.running = False
+                    global continuousAttack
+                    if not continuousAttack:
+                        self.running = False
                     return
         result.update({"status": "not_vulnerable"})
         return

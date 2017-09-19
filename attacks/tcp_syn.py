@@ -13,6 +13,8 @@ class TcpSyn(GenericAttack):
     def initialize(self, result):
         self.running = True
         target = self.device['ip']
+        global continuousAttack
+        continuousAttack = self.config['continuous_attack']
 
         if self.device["vulnerable_ports"] is None:
             result.update({"status": "no open ports"})
@@ -67,7 +69,9 @@ class TcpSyn(GenericAttack):
                 time.sleep(0.1)
                 if detected == max:
                     result.update({"status": "vulnerable", "dos-status": "device not responding"})
-                    self.running = False
+                    global continuousAttack
+                    if not continuousAttack:
+                        self.running = False
                     return
         result.update({"status": "not_vulnerable", "dos-status": "device responding"})
         return

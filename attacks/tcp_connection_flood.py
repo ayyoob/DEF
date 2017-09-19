@@ -12,6 +12,8 @@ class TcpConnectionFlood(GenericAttack):
     def initialize(self, result):
         self.running = True
         target = self.device['ip']
+        global continuousAttack
+        continuousAttack = self.config['continuous_attack']
 
         if self.device["vulnerable_ports"] is None:
             result.update({"status": "no open ports"})
@@ -65,7 +67,9 @@ class TcpConnectionFlood(GenericAttack):
                 if detected == max:
                     result.update({"status": "vulnerable", "dos-status": "device not responding", "connections": counter,
                        "connection_distribution": connectionsPerPort, "attack_time:": (time.time() - start_time)})
-                    self.running = False
+                    global continuousAttack
+                    if not continuousAttack:
+                        self.running = False
                     return
         result.update({"status": "not_vulnerable", "dos-status": "device responding", "connections": counter,
                        "connection_distribution": connectionsPerPort, "attack_time:": (time.time() - start_time)})
