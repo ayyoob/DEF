@@ -15,10 +15,18 @@ import sys
 import traceback
 import netifaces
 import time
+import signal
 
 if int(getuid()) > 0:
     print('Please run as root.')
     _exit(1)
+
+
+def signal_handler(signal, frame):
+    print 'You pressed Ctrl+C!'
+    # for p in jobs:
+    #     p.terminate()
+    sys.exit(0)
 
 logdatetime = strftime("%Y_%m_%d_%H_%M_%S", gmtime())
 def setup_logging(default_path='logging.json', default_level=logging.INFO, env_key='LOG_CFG'):
@@ -92,28 +100,29 @@ def validatePrerequisite(data):
     return True, "success"
 
 
-def performAttacks(data, deviceConfig, iprange):
+def performAttacks(data, deviceConfig, iprange = ""):
     result = {}
     attacks = data["attack"]
     interval = data["interval_between_attacks_in_seconds"]
     currentAttack = None
     macAddress = deviceConfig['macAddress']
+    ipToAttack =""
     try:
         for attackName in attacks:
-
-            ipToAttack = getIp(iprange, macAddress)
-            retryCount = 0
-            maxRetry = 5
-            while (ipToAttack is None or ipToAttack == '') and retryCount < maxRetry:
+            if not data["remoteAttackMode"]:
                 ipToAttack = getIp(iprange, macAddress)
-                retryCount = retryCount + 1
-                time.sleep(5)
-                log.info("Device with macAddress %s is not reachable, retrying" % macAddress)
-            if ((ipToAttack is None or ipToAttack == '') and retryCount == maxRetry):
-                log.info("Device with macAddress %s is not reachable" % macAddress)
-                sys.exit(1)
+                retryCount = 0
+                maxRetry = 5
+                while (ipToAttack is None or ipToAttack == '') and retryCount < maxRetry:
+                    ipToAttack = getIp(iprange, macAddress)
+                    retryCount = retryCount + 1
+                    time.sleep(10)
+                    log.info("Device with macAddress %s is not reachable, retrying" % macAddress)
+                if ((ipToAttack is None or ipToAttack == '') and retryCount == maxRetry):
+                    log.info("Device with macAddress %s is not reachable" % macAddress)
+                    continue
 
-            deviceConfig['ip'] = ipToAttack
+                deviceConfig['ip'] = ipToAttack
             attackClass = classReflectionLoader(attackName)
             currentAttack = attackClass(attackName, data[attackName], deviceConfig)
             attackStartTime = int(time.time())
@@ -121,17 +130,26 @@ def performAttacks(data, deviceConfig, iprange):
             attack_status = {}
             t = threading.Thread(target=currentAttack.initialize, args=(attack_status,))
             t.start()
-
-            if (data[attackName].has_key("execution_timeout_in_seconds")):
-                t.join(data[attackName]["execution_timeout_in_seconds"])
-            else:
+            if t.isAlive():
+                if (data[attackName].has_key("execution_timeout_in_seconds")):
+                    t.join(data[attackName]["execution_timeout_in_seconds"])
+                else:
+                    t.join()
+                currentAttack.shutdown()
                 t.join()
-            currentAttack.shutdown()
-            t.join()
             log.info("%s Result" % attack_status)
             log.info("%s Completed." % attackName)
             attackCompletedTime = int(time.time())
-            result.update({attackName: {"start_time": attackStartTime, "end_time": attackCompletedTime,
+            resultKeys = result.keys()
+            resultKey = attackName;
+            id = 1
+            while True:
+                if resultKey not in resultKeys:
+                    break
+                else:
+                    resultKey = attackName + "-" + str(id)
+                    id +=1
+            result.update({resultKey: {"start_time": attackStartTime, "end_time": attackCompletedTime,
                                         "result": attack_status}})
             time.sleep(interval)
 
@@ -145,6 +163,7 @@ def performAttacks(data, deviceConfig, iprange):
 def getIp(iprange, macAddress):
     nm = nmap_python.PortScanner()
     nm.scan(iprange, arguments='-sP -n')
+
     for h in nm.all_hosts():
         if 'mac' in nm[h]['addresses']:
             if nm[h]['addresses']['mac'] == macAddress:
@@ -211,30 +230,34 @@ def setupDevice(macAddress, data):
     global gateway
     global broadcast_ip
     global iprange
-
-    ipToAttack = getIp(iprange, macAddress)
-    if ipToAttack is None:
-        log.info("device not available for %s " % macAddress)
-        return
-    log.info('IP %s & macAddress %s is configured for the attacks' % (ipToAttack, macAddress))
     deviceConfig = {}
-    defaultgateway = {"gateway-ip": gateway}
-    targetDevice = {"target-ip": gateway}
-    if (data["mode"]=="d2d"):
-        targetDevice = {"target-ip": getIp(iprange ,data["d2d-target-macAddress"])}
-    macAddress = {"macAddress": macAddress}
-    broadcast = {"broadcast_ip": broadcast_ip}
+    macAddressdict = {"macAddress": macAddress}
+    deviceConfig.update(macAddressdict)
     testTimeStamp = {"time": logdatetime}
-    ip = {"ip": ipToAttack}
-
-    deviceConfig.update(ip)
-    deviceConfig.update(macAddress)
-    deviceConfig.update(defaultgateway)
-    deviceConfig.update(broadcast)
     deviceConfig.update(testTimeStamp)
-    deviceConfig.update(targetDevice)
-    result = performAttacks(data, deviceConfig, iprange)
 
+    if not data["remoteAttackMode"]:
+        ipToAttack = getIp(iprange, macAddress)
+        log.info(ipToAttack)
+        if ipToAttack is None:
+            log.info("device not available for %s " % macAddress)
+            return
+        log.info('IP %s & macAddress %s is configured for the attacks' % (ipToAttack, macAddress))
+
+        defaultgateway = {"gateway-ip": gateway}
+        targetDevice = {"target-ip": gateway}
+        if (data["mode"]=="d2d"):
+            targetDevice = {"target-ip": getIp(iprange ,data["d2d-target-macAddress"])}
+        broadcast = {"broadcast_ip": broadcast_ip}
+        ip = {"ip": ipToAttack}
+
+        deviceConfig.update(ip)
+        deviceConfig.update(defaultgateway)
+        deviceConfig.update(broadcast)
+        deviceConfig.update(targetDevice)
+        result = performAttacks(data, deviceConfig, iprange)
+    else:
+        result = performAttacks(data, deviceConfig)
     deviceConfig.update({"attacks": result})
     deviceConfig.update({"setup": data})
     print(deviceConfig)
@@ -256,8 +279,10 @@ def main():
     global iprange
     if data['blockPrint']:
         blockPrint()
-
-    macAddresses, gateway, broadcast_ip, iprange = getDeviceNetworkConfig(data);
+    if data["remoteAttackMode"]:
+        macAddresses = data["mac_address"]
+    else:
+        macAddresses, gateway, broadcast_ip, iprange = getDeviceNetworkConfig(data);
 
     if isinstance(macAddresses, list):
         for macAddress in macAddresses:
@@ -277,4 +302,5 @@ def main():
         reportGenerator = report_generator.ReportGenerator(data, deviceResults, logdatetime)
         reportGenerator.generate()
 
+signal.signal(signal.SIGINT, signal_handler)
 main()

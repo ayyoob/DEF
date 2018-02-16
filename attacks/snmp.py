@@ -24,6 +24,10 @@ class Snmp(GenericAttack):
             result.update({"status": "no open ports"})
             return
 
+        if 161 not in self.device["vulnerable_ports"]["udp"]["open"]:
+            result.update({"status": "no open ports"})
+            return
+
         self.running = True
         file_prefix = self.config["file_prefix"]
         filename = 'results/' + self.device['time'] + '/' + file_prefix + self.device['macAddress'] + '.pcap'
@@ -40,7 +44,7 @@ class Snmp(GenericAttack):
             #spoofed_packet = IP(dst=target) / UDP(dport=port) / SNMP(version="v2c", community='public',PDU=SNMPbulk(id=RandNum(1, 200000000),max_repetitions=10,varbindlist=[SNMPvarbind(oid=ASN1_OID('1'))]))
             send(spoofed_packet)
             time.sleep(0.5)
-        time.sleep(5)
+        time.sleep(10)
         self.terminateDump()
 
         file_prefix = self.config["file_prefix"]

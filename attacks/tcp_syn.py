@@ -28,6 +28,10 @@ class TcpSyn(GenericAttack):
             result.update({"status": "no open ports"})
             return
 
+        if len(self.device["vulnerable_ports"]["tcp"]["open"]) == 0:
+            result.update({"status": "no open ports"})
+            return
+
         """ Send packets
                 """
 

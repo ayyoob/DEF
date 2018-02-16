@@ -17,19 +17,19 @@ class Ssdp(GenericAttack):
         target = self.device['ip']
 
         if self.device["vulnerable_ports"] is None:
-            result = {"status": "no open ports"}
+            result.update({"status": "no open ports"})
             return
 
         if "udp" not in self.device["vulnerable_ports"].keys():
-            result = {"status": "no open ports"}
+            result.update({"status": "no open ports"})
             return
 
         if "open" not in self.device["vulnerable_ports"]["udp"].keys():
-            result = {"status": "no open ports"}
+            result.update({"status": "no open ports"})
             return
 
         if 1900 not in self.device["vulnerable_ports"]["udp"]["open"]:
-            result = {"status": "no open ports"}
+            result.update({"status": "no open ports"})
             return
 
         self.running = True

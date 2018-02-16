@@ -1,16 +1,16 @@
 {
-  "attack": ["ArpSpoof"],
+  "attack": ["TcpSynReflectionRemote5","TcpSynReflectionRemote50","TcpSynReflectionRemote"],
   "interfaces": "eth0,en0,eno1",
   "mac_address":["EC:1A:59:79:50:1D","EC:1A:59:79:F4:89","00:16:6C:AB:6B:88","B4:75:0E:EC:E5:A9","EC:1A:59:7A:02:C5"],
   "mode":"d2s",
   "d2d-target-macAddress":"CC:FA:00:F0:54:09",
-  "interval_between_attacks_in_seconds": 800,
+  "interval_between_attacks_in_seconds": 120,
   "blockPrint": true,
   "remoteAttackMode":false,
   "ArpSpoof": {
     "execution_timeout_in_seconds": 1200,
     "tcpdump": false,
-    "delay_in_seconds": 10,
+    "delay_in_seconds": 1,
     "warmup_in_seconds": 2
   },
 
@@ -32,51 +32,6 @@
     "00:16:6C:AB:6B:88": {"tcp": {"filtered": [], "open": [80, 443, 554, 943, 4520,49152]}, "udp": {"filtered": [], "open": [161, 5353]}}
 
   },
-"PortVulnerabilityTest30000": {
-    "port_range": "0-30000",
-    "udp": false,
-    "skip": false,
-    "optimization": "--min-parallelism 100 --stats-every 1m"
-  },
-
-"PortVulnerabilityTest10000": {
-    "port_range": "0-10000",
-    "udp": false,
-    "skip": false,
-    "optimization": "--min-parallelism 100 --stats-every 1m"
-  },
-
-"PortVulnerabilityTest1000": {
-    "port_range": "0-1000",
-    "udp": true,
-    "skip": false,
-    "optimization": "--min-parallelism 100 --stats-every 1m"
-  },
-"PortVulnerabilityTestudp": {
-    "port_range": "0-65535",
-    "udp": true,
-    "skip": false,
-    "optimization": "--min-parallelism 100 --stats-every 1m"
-  },
-"PortVulnerabilityTestudp30000": {
-    "port_range": "0-30000",
-    "udp": true,
-    "skip": false,
-    "optimization": "--min-parallelism 100 --stats-every 1m"
-  },
-"PortVulnerabilityTestudp10000": {
-    "port_range": "0-10000",
-    "udp": true,
-    "skip": false,
-    "optimization": "--min-parallelism 100 --stats-every 1m"
-  },
-"PortVulnerabilityTestudp1000": {
-    "port_range": "0-1000",
-    "udp": true,
-    "skip": false,
-    "optimization": "--min-parallelism 100 --stats-every 1m"
-  },
-
 "SmurfDevice5": {
     "execution_timeout_in_seconds": 1200,
     "server_ip": "149.171.37.122"
@@ -95,17 +50,17 @@
 
 "SmurfLocal5": {
     "execution_timeout_in_seconds": 1200,
-    "server_ip": "192.168.1.175"
+    "server_ip": "192.168.1.154"
   },
 
 "SmurfLocal50": {
     "execution_timeout_in_seconds": 1200,
-    "server_ip": "192.168.1.175"
+    "server_ip": "192.168.1.154"
   },
 
 "SmurfLocal": {
     "execution_timeout_in_seconds": 1200,
-    "server_ip": "192.168.1.175"
+    "server_ip": "192.168.1.154"
   },
 
   "SmurfRemote": {
@@ -116,56 +71,56 @@
     "execution_timeout_in_seconds": 1200,
     "continuous_attack": true,
     "port":80,
-    "deviceMode":false,
+    "deviceMode":true,
     "server_ip": "149.171.37.122",
     "gateway_ip": "149.171.37.75",
-    "EC:1A:59:79:50:1D":1902,
-    "EC:1A:59:79:F4:89":1905,
+    "EC:1A:59:79:50:1D":1900,
+    "EC:1A:59:79:F4:89":1900,
     "B2:C5:54:37:3F:B7":1900,
-    "B4:75:0E:EC:E5:A9":1901,
+    "B4:75:0E:EC:E5:A9":1900,
     "50:C7:BF:00:56:39":1040,
     "00:16:6C:AB:6B:88":161,
-    "EC:1A:59:7A:02:C5":1904
+    "EC:1A:59:7A:02:C5":1900
   },
 
  "UdpDevice50": {
     "execution_timeout_in_seconds": 1200,
     "continuous_attack": true,
     "port":80,
-    "deviceMode":false,
+    "deviceMode":true,
     "server_ip": "149.171.37.122",
     "gateway_ip": "149.171.37.75",
-    "EC:1A:59:79:50:1D":1902,
-    "EC:1A:59:79:F4:89":1905,
+    "EC:1A:59:79:50:1D":1900,
+    "EC:1A:59:79:F4:89":1900,
     "B2:C5:54:37:3F:B7":1900,
-    "B4:75:0E:EC:E5:A9":1901,
+    "B4:75:0E:EC:E5:A9":1900,
     "50:C7:BF:00:56:39":1040,
     "00:16:6C:AB:6B:88":161,
-    "EC:1A:59:7A:02:C5":1904
+    "EC:1A:59:7A:02:C5":1900
   },
 
  "UdpDevice5": {
     "execution_timeout_in_seconds": 1200,
     "continuous_attack": true,
     "port":80,
-    "deviceMode":false,
+    "deviceMode":true,
     "server_ip": "149.171.37.122",
     "gateway_ip": "149.171.37.75",
-    "EC:1A:59:79:50:1D":1902,
-    "EC:1A:59:79:F4:89":1905,
+    "EC:1A:59:79:50:1D":1900,
+    "EC:1A:59:79:F4:89":1900,
     "B2:C5:54:37:3F:B7":1900,
-    "B4:75:0E:EC:E5:A9":1901,
+    "B4:75:0E:EC:E5:A9":1900,
     "50:C7:BF:00:56:39":1040,
     "00:16:6C:AB:6B:88":161,
-    "EC:1A:59:7A:02:C5":1904
+    "EC:1A:59:7A:02:C5":1900
   },
 
  "TcpSynDevice5": {
     "execution_timeout_in_seconds": 1200,
     "continuous_attack": true,
     "port":80,
-    "deviceMode":false,
-    "server_ip": "192.168.1.175",
+    "deviceMode":true,
+    "server_ip": "149.171.37.122",
     "gateway_ip": "149.171.37.75",
     "EC:1A:59:79:50:1D":53,
     "EC:1A:59:79:F4:89":49153,
@@ -173,14 +128,14 @@
     "B4:75:0E:EC:E5:A9":81,
     "50:C7:BF:00:56:39":9999,
     "00:16:6C:AB:6B:88":554,
-    "EC:1A:59:7A:02:C5":49152
+    "EC:1A:59:7A:02:C5":49153
   },
 
  "TcpSynDevice": {
     "execution_timeout_in_seconds": 1200,
     "continuous_attack": true,
     "port":80,
-    "deviceMode":false,
+    "deviceMode":true,
     "server_ip": "149.171.37.122",
     "gateway_ip": "149.171.37.75",
     "EC:1A:59:79:50:1D":53,
@@ -189,14 +144,14 @@
     "B4:75:0E:EC:E5:A9":81,
     "50:C7:BF:00:56:39":9999,
     "00:16:6C:AB:6B:88":554,
-    "EC:1A:59:7A:02:C5":49152
+    "EC:1A:59:7A:02:C5":49153
   },
 
  "TcpSynDevice50": {
     "execution_timeout_in_seconds": 1200,
     "continuous_attack": true,
     "port":80,
-    "deviceMode":false,
+    "deviceMode":true,
     "server_ip": "149.171.37.122",
     "gateway_ip": "149.171.37.75",
     "EC:1A:59:79:50:1D":53,
@@ -205,7 +160,7 @@
     "B4:75:0E:EC:E5:A9":81,
     "50:C7:BF:00:56:39":9999,
     "00:16:6C:AB:6B:88":554,
-    "EC:1A:59:7A:02:C5":49152
+    "EC:1A:59:7A:02:C5":49153
   },
 
 
@@ -214,8 +169,8 @@
     "execution_timeout_in_seconds": 1200,
     "continuous_attack": true,
     "port":80,
-    "deviceMode":false,
-    "server_ip": "192.168.1.175",
+    "deviceMode":true,
+    "server_ip": "192.168.1.154",
     "gateway_ip": "149.171.37.75",
     "EC:1A:59:79:50:1D":53,
     "EC:1A:59:79:F4:89":49153,
@@ -230,8 +185,8 @@
     "execution_timeout_in_seconds": 1200,
     "continuous_attack": true,
     "port":80,
-    "deviceMode":false,
-    "server_ip": "192.168.1.175",
+    "deviceMode":true,
+    "server_ip": "192.168.1.154",
     "gateway_ip": "149.171.37.75",
     "EC:1A:59:79:50:1D":53,
     "EC:1A:59:79:F4:89":49153,
@@ -246,8 +201,8 @@
     "execution_timeout_in_seconds": 1200,
     "continuous_attack": true,
     "port":80,
-    "deviceMode":false,
-    "server_ip": "192.168.1.175",
+    "deviceMode":true,
+    "server_ip": "192.168.1.154",
     "gateway_ip": "149.171.37.75",
     "EC:1A:59:79:50:1D":53,
     "EC:1A:59:79:F4:89":49153,
@@ -263,7 +218,7 @@
     "type":"unicast",
     "port":80,
     "deviceMode":false,
-    "server_ip": "192.168.1.175",
+    "server_ip": "149.171.37.122",
     "gateway_ip": "149.171.37.75",
     "00:16:6C:AB:6B:88":1903,
     "EC:1A:59:79:50:1D":1902,
@@ -277,7 +232,7 @@
     "type":"unicast",
     "port":80,
     "deviceMode":false,
-    "server_ip": "192.168.1.175",
+    "server_ip": "149.171.37.122",
     "gateway_ip": "149.171.37.75",
     "00:16:6C:AB:6B:88":1903,
     "EC:1A:59:79:50:1D":1902,
@@ -291,7 +246,7 @@
     "type":"unicast",
     "port":80,
     "deviceMode":false,
-    "server_ip": "192.168.1.175",
+    "server_ip": "149.171.37.122",
     "gateway_ip": "149.171.37.75",
     "00:16:6C:AB:6B:88":1903,
     "EC:1A:59:79:50:1D":1902,
@@ -303,27 +258,27 @@
   "SnmpRemote": {
     "execution_timeout_in_seconds": 1200,
     "type":"unicast",
-    "deviceMode":true,
+"deviceMode":false,
     "port":80,
-    "server_ip": "192.168.1.175",
+    "server_ip": "149.171.37.122",
     "gateway_ip": "149.171.37.75",
     "00:16:6C:AB:6B:88":161
   },
 "SnmpRemote5": {
     "execution_timeout_in_seconds": 1200,
     "type":"unicast",
-    "deviceMode":true,
+"deviceMode":false,
     "port":80,
-    "server_ip": "192.168.1.175",
+    "server_ip": "149.171.37.122",
     "gateway_ip": "149.171.37.75",
     "00:16:6C:AB:6B:88":161
   },
 "SnmpRemote50": {
     "execution_timeout_in_seconds": 1200,
     "type":"unicast",
-    "deviceMode":true,
+"deviceMode":false,
     "port":80,
-    "server_ip": "192.168.1.175",
+    "server_ip": "149.171.37.122",
     "gateway_ip": "149.171.37.75",
     "00:16:6C:AB:6B:88":161
   },
